@@ -8,7 +8,7 @@
 
 #import "ERAppDelegate.h"
 #import "ERMapViewController.h"
-
+#import "FLEXManager.h"
 
 @interface ERAppDelegate ()
 @end
@@ -18,6 +18,11 @@
 - (BOOL)application:(UIApplication *)application willFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[ERMapViewController new]];
+    
+    [self.window makeKeyAndVisible];
+    
+    [[FLEXManager sharedManager] showExplorer];
+    
     return YES;
 }
 

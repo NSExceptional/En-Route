@@ -11,6 +11,7 @@
 
 @implementation ERMapViewController
 
+
 - (void)loadView {
     self.view = [[MKMapView alloc] initWithFrame:[UIScreen mainScreen].bounds];
 }
