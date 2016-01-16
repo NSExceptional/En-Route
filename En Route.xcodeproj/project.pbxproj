@@ -16,6 +16,7 @@
 		B468D8D21C49C42800AFC6A7 /* ERMapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8D11C49C42800AFC6A7 /* ERMapViewController.m */; };
 		B471FAD91C49E70D005AAD9F /* ERMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = B471FAD81C49E70D005AAD9F /* ERMapView.m */; };
 		B490FBE11C4A2B2400717275 /* ERAddressTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = B490FBE01C4A2B2400717275 /* ERAddressTextField.m */; };
+		B490FBE71C4A7ACC00717275 /* ERLocalSearchQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = B490FBE61C4A7ACC00717275 /* ERLocalSearchQueue.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +36,8 @@
 		B471FAD81C49E70D005AAD9F /* ERMapView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERMapView.m; sourceTree = "<group>"; };
 		B490FBDF1C4A2B2400717275 /* ERAddressTextField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERAddressTextField.h; sourceTree = "<group>"; };
 		B490FBE01C4A2B2400717275 /* ERAddressTextField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERAddressTextField.m; sourceTree = "<group>"; };
+		B490FBE51C4A7ACC00717275 /* ERLocalSearchQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERLocalSearchQueue.h; sourceTree = "<group>"; };
+		B490FBE61C4A7ACC00717275 /* ERLocalSearchQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERLocalSearchQueue.m; sourceTree = "<group>"; };
 		EDDF7E5BC73E9E7F9D682952 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		EE0C598ED700E1D7913EB82D /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -99,6 +102,8 @@
 				85B313CB1C4A18F800AC665E /* ERCalloutView.m */,
 				B490FBDF1C4A2B2400717275 /* ERAddressTextField.h */,
 				B490FBE01C4A2B2400717275 /* ERAddressTextField.m */,
+				B490FBE51C4A7ACC00717275 /* ERLocalSearchQueue.h */,
+				B490FBE61C4A7ACC00717275 /* ERLocalSearchQueue.m */,
 				B468D8C51C49C33400AFC6A7 /* Assets.xcassets */,
 				B468D8C71C49C33400AFC6A7 /* LaunchScreen.storyboard */,
 				B468D8CA1C49C33400AFC6A7 /* Info.plist */,
@@ -226,6 +231,7 @@
 				B471FAD91C49E70D005AAD9F /* ERMapView.m in Sources */,
 				B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */,
 				B468D8BB1C49C33400AFC6A7 /* main.m in Sources */,
+				B490FBE71C4A7ACC00717275 /* ERLocalSearchQueue.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -10,6 +10,7 @@
 #import "TBAlertController.h"
 #import "ERCalloutView.h"
 #import "ERAddressTextField.h"
+#import "ERLocalSearchQueue.h"
 
 
 static const CGFloat kTFHeight          = 28;
@@ -25,11 +26,21 @@ static const CGFloat kTFBottomPadding   = 12;
 @property (nonatomic, readonly) ERAddressTextField *startTextField;
 @property (nonatomic, readonly) ERAddressTextField *endTextField;
 
-@property (nonatomic) NSMutableArray *POIs; //points of interest
+@property (nonatomic, readonly) UIBarButtonItem *clearButton;
+@property (nonatomic, readonly) UIBarButtonItem *routeButton;
+@property (nonatomic, readonly) UIBarButtonItem *listButton;
+
+@property (nonatomic) NSMutableSet *POIs;
+@property (nonatomic) NSMutableSet *latestPOIs;
+@property (nonatomic, readonly) NSArray *annotations;
+@property (nonatomic, readonly) NSArray *latestAnnotations;
 
 @property (nonatomic, readonly) BOOL hideButtons;
 @property (nonatomic) MKAnnotationView *userLocation;
 @property (nonatomic) MKAnnotationView *droppedPin;
+
+@property (nonatomic) BOOL loadingResults;
+@property (nonatomic) ERLocalSearchQueue *searchQueue;
 
 @end
 
@@ -81,7 +92,8 @@ static const CGFloat kTFBottomPadding   = 12;
     [super viewDidLoad];
     
     self.title = @"En Route";
-    self.POIs = [NSMutableArray array];
+    self.POIs = [NSMutableSet set];
+    self.latestPOIs = [NSMutableSet set];
     
     // Locaiton manager is used to get location permissions
     self.locationManager = [CLLocationManager new];
@@ -89,10 +101,9 @@ static const CGFloat kTFBottomPadding   = 12;
     
     // Toolbar items
     MKUserTrackingBarButtonItem *userTrackingButton = [[MKUserTrackingBarButtonItem alloc] initWithMapView:self.mapView];
-    UIBarButtonItem *list = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(showList)];
+    _listButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(showList)];
     UIBarButtonItem *spacer = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    self.toolbarItems = @[userTrackingButton, spacer, list];
-    list.enabled = NO;
+    self.toolbarItems = @[userTrackingButton, spacer, _listButton];
     
     // Hide keyboard on tap
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self.startTextField action:@selector(resignFirstResponder)];
@@ -101,10 +112,13 @@ static const CGFloat kTFBottomPadding   = 12;
     
     // Navbar items
     [self hideNavBar];
-    [self updateNavigationItems];
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Clear" style:UIBarButtonItemStylePlain target:self action:@selector(clearButtonPressed)];
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Route" style:UIBarButtonItemStyleDone target:self action:@selector(beginRouting)];
+    _clearButton = [[UIBarButtonItem alloc] initWithTitle:@"Clear" style:UIBarButtonItemStylePlain target:self action:@selector(clearButtonPressed)];
+    _routeButton = [[UIBarButtonItem alloc] initWithTitle:@"Route" style:UIBarButtonItemStyleDone target:self action:@selector(beginRouting)];
     self.navigationController.toolbarHidden = NO;
+    self.navigationItem.leftBarButtonItem   = _clearButton;
+    self.navigationItem.rightBarButtonItem  = _routeButton;
+    
+    [self updateNavigationItems];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -130,6 +144,16 @@ static const CGFloat kTFBottomPadding   = 12;
     [self.mapView removeOverlays:self.mapView.overlays];
     self.startTextField.text = nil;
     self.endTextField.text = nil;
+    
+    [self.mapView removeAnnotations:self.mapView.annotations];
+    [self.POIs removeAllObjects];
+    
+    [self updateButtons];
+}
+
+- (void)resetMapData {
+    [self.mapView removeAnnotations:self.mapView.annotations];
+    [self.POIs removeAllObjects];
 }
 
 - (void)showList {
@@ -137,33 +161,61 @@ static const CGFloat kTFBottomPadding   = 12;
 
 - (void)beginRouting {
     [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+    self.loadingResults = YES;
+    [self updateNavigationItems];
     
-    __block MKPlacemark *start = nil, *end = nil;
-    
-    CLGeocoder *geocoder = [CLGeocoder new];
-    // Get starting address
-    [geocoder geocodeAddressString:self.startTextField.text completionHandler:^(NSArray *startPlacemank, NSError *error) {
-        if (startPlacemank && startPlacemank.count) {
-            start = [[MKPlacemark alloc] initWithPlacemark:startPlacemank[0]];
-            // Get destination address
-            [geocoder geocodeAddressString:self.endTextField.text completionHandler:^(NSArray *endPlacemark, NSError *error2) {
-                if (endPlacemark && endPlacemark.count) {
-                    end = [[MKPlacemark alloc] initWithPlacemark:endPlacemark[0]];
-                    // Show routes
-                    [self showRoutesForStart:start end:end];
-                } else {
-                    [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not locate destination address"] showFromViewController:self];
-                    [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-                }
-            }];
-        } else {
-            [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not locate starting address"] showFromViewController:self];
-            [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-        }
+    [self getStartPlacemark:^(MKPlacemark *start) {
+        [self getEndPlacemark:^(MKPlacemark *end) {
+            [self showRoutesForStart:start end:end];
+        }];
     }];
 }
 
+- (void)getStartPlacemark:(void(^)(MKPlacemark *start))callback {
+    if ([self.startTextField.text isEqualToString:@"Current location"]) {
+        callback([[MKPlacemark alloc] initWithCoordinate:[(id)self.userLocation.annotation coordinate] addressDictionary:nil]);
+    } else {
+        [[CLGeocoder new] geocodeAddressString:self.startTextField.text completionHandler:^(NSArray *placemark, NSError *error) {
+            if (placemark && placemark.count) {
+                MKPlacemark *start = [[MKPlacemark alloc] initWithPlacemark:placemark[0]];
+                callback(start);
+            } else {
+                [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not locate starting address"] showFromViewController:self];
+                [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+                self.loadingResults = NO;
+                [self updateNavigationItems];
+            }
+        }];
+    }
+}
+
+- (void)getEndPlacemark:(void(^)(MKPlacemark *end))callback {
+    if ([self.endTextField.text isEqualToString:@"Current location"]) {
+        callback([[MKPlacemark alloc] initWithCoordinate:[(id)self.userLocation.annotation coordinate] addressDictionary:nil]);
+    } else {
+        [[CLGeocoder new] geocodeAddressString:self.endTextField.text completionHandler:^(NSArray *placemark, NSError *error) {
+            if (placemark && placemark.count) {
+                MKPlacemark *end = [[MKPlacemark alloc] initWithPlacemark:placemark[0]];
+                callback(end);
+            } else {
+                [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not locate destination address"] showFromViewController:self];
+                [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+                self.loadingResults = NO;
+                [self updateNavigationItems];
+            }
+        }];
+    }
+}
+
 #pragma mark - POI processing
+
+- (NSArray *)latestAnnotations {
+    return [self.latestPOIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"];
+}
+
+- (NSArray *)annotations {
+    return [self.POIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"];
+}
 
 - (NSArray<CLLocation*> *)coordinatesAlongRoute:(MKRoute *)route {
     NSMutableArray *points = [NSMutableArray array];
@@ -172,21 +224,14 @@ static const CGFloat kTFBottomPadding   = 12;
         [points addObject:[[CLLocation alloc] initWithLatitude:coord.latitude longitude:coord.longitude]];
     }
     
+    // Debugging
+    //    NSMutableArray *placemarks = [NSMutableArray new];
+    //    for (CLLocation *loc in points)
+    //        [placemarks addObject:[[MKPlacemark alloc] initWithCoordinate:loc.coordinate addressDictionary:nil]];
+    //    
+    //    [self.mapView addAnnotations:placemarks];
+    //    return @[];
     return points;
-}
-
-- (void)searchWithCoord:(CLLocation *)location {
-    MKLocalSearchRequest *request = [MKLocalSearchRequest new];
-    request.naturalLanguageQuery = @"food";
-    request.region = MKCoordinateRegionMakeWithDistance(location.coordinate, 800, 800);
-    
-    [[[MKLocalSearch alloc] initWithRequest:request] startWithCompletionHandler:^(MKLocalSearchResponse *response, NSError *error) {
-        if (!error && response) {
-            [self.POIs addObjectsFromArray:response.mapItems];
-        } else {
-            
-        }
-    }];
 }
 
 - (void)showRoutesForStart:(MKPlacemark *)start end:(MKPlacemark *)end {
@@ -196,16 +241,52 @@ static const CGFloat kTFBottomPadding   = 12;
     MKDirectionsRequest *request = [MKDirectionsRequest new];
     request.source               = startLocation;
     request.destination          = endLocation;
+    request.requestsAlternateRoutes = YES;
     
     MKDirections *directions     = [[MKDirections alloc] initWithRequest:request];
     [directions calculateDirectionsWithCompletionHandler:^(MKDirectionsResponse *response, NSError *error) {
-        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
         
         if (!error && response.routes.count) {
             [self.mapView addOverlays:[response.routes valueForKeyPath:@"@unionOfObjects.polyline"]];
+            
+            // Add annotations
+            [self searchRoute:response.routes.firstObject then:response.routes.mutableCopy];
+            
         } else {
             [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not get directions"] showFromViewController:self];
+            [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+            self.loadingResults = NO;
+            [self updateNavigationItems];
         }
+    }];
+}
+
+- (void)searchRoute:(MKRoute *)route then:(NSMutableArray *)alternates {
+    if (!route) {
+        self.searchQueue = nil;
+        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+        self.loadingResults = NO;
+        [self updateNavigationItems];
+        return;
+    }
+    
+    NSArray *coords = [self coordinatesAlongRoute:route];
+    
+    // Perform search
+    self.searchQueue = self.searchQueue ?: [ERLocalSearchQueue queueWithQuery:@"food" radius:500];
+    [self.searchQueue searchWithCoords:coords loopCallback:^(NSArray *mapItems) {
+        [self.latestPOIs addObjectsFromArray:mapItems];
+    } completionCallback:^{
+        [self.latestPOIs minusSet:self.POIs];
+        [self.POIs addObjectsFromArray:self.latestPOIs.allObjects];
+        [self.mapView addAnnotations:self.latestAnnotations];
+        [self.latestPOIs removeAllObjects];
+        
+        [alternates removeObject:route];
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(6 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self searchRoute:alternates.firstObject then:alternates];
+        });
     }];
 }
 
@@ -215,8 +296,9 @@ static const CGFloat kTFBottomPadding   = 12;
 
 - (void)updateNavigationItems {
     // Clear enabled if any text, Go enabled if both text
-    self.navigationItem.leftBarButtonItem.enabled  = _startTextField.text.length || _endTextField.text.length;
-    self.navigationItem.rightBarButtonItem.enabled = self.hideButtons;
+    self.clearButton.enabled  = !self.loadingResults && (_startTextField.text.length || _endTextField.text.length);
+    self.routeButton.enabled = !self.loadingResults && self.hideButtons;
+    self.listButton.enabled = self.POIs.count > 0;
 }
 
 - (void)updateButtons {
@@ -272,10 +354,28 @@ static const CGFloat kTFBottomPadding   = 12;
     }
 }
 
+- (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        self.startTextField.text = @"Current location";
+        self.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
+        [self beginRouting];
+    });
+}
+
 // Left this in this class because putting it in ERMapView caused the drop animation to disappear
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(nonnull id<MKAnnotation>)annotation {
     
-    if ([annotation isKindOfClass:[MKUserLocation class]]) {
+    if ([annotation class] == [MKPlacemark class]) {
+        // For POIs
+        MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"poi"];
+        pin.animatesDrop         = YES;
+        pin.pinColor             = MKPinAnnotationColorPurple;
+        pin.canShowCallout       = YES;
+        pin.calloutOffset        = CGPointMake(-8, 0);
+        
+        return pin;
+        
+    } else if ([annotation isKindOfClass:[MKUserLocation class]]) {
         MKPinAnnotationView *user = [[NSClassFromString(@"MKModernUserLocationView") alloc] initWithAnnotation:annotation reuseIdentifier:@"user"];
         self.userLocation = user;
         
@@ -299,11 +399,14 @@ static const CGFloat kTFBottomPadding   = 12;
         }
         
         return user;
+        
     } else {
+        // MKPointAnnotation class, for dropped pins
+        
         // TODO: reuse annotation views. see -[MKMapView dequeueReusableAnnotationViewWithIdentifier:
-        MKPinAnnotationView *pin = [MKPinAnnotationView new];
+        MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"dropped"];
         pin.animatesDrop         = YES;
-        pin.pinColor             = MKPinAnnotationColorPurple;
+        pin.pinColor             = MKPinAnnotationColorRed;
         pin.canShowCallout       = YES;
         pin.calloutOffset        = CGPointMake(-8, 0);
         self.droppedPin = pin;
@@ -335,7 +438,7 @@ static const CGFloat kTFBottomPadding   = 12;
 - (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(nonnull id<MKOverlay>)overlay {
     MKPolylineRenderer *renderer = [[MKPolylineRenderer alloc] initWithPolyline:overlay];
     renderer.strokeColor = [UIColor colorWithRed:0.000 green:0.550 blue:1.000 alpha:1.000];
-    renderer.lineWidth = 5;
+    renderer.lineWidth = 7;
     return renderer;
 }
 
@@ -358,6 +461,13 @@ static const CGFloat kTFBottomPadding   = 12;
 
 - (void)textFieldDidEndEditing:(UITextField *)textField {
     [self updateButtons];
+}
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField {
+    [self.searchQueue cancelRequests];
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+    self.loadingResults = NO;
+    [self updateNavigationItems];
 }
 
 @end
