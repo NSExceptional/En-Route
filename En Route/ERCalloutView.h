@@ -11,12 +11,12 @@
 
 @interface ERCalloutView : UIView
 
-+ (instancetype)viewForAnnotation:(MKPinAnnotationView *)pin;
++ (instancetype)viewForAnnotation:(MKAnnotationView *)pin;
 
-@property (nonatomic) UIColor *leftColor;
-@property (nonatomic) UIColor *rightColor;
+@property (nonatomic) UIColor *buttonColor;
+@property (nonatomic, copy) void (^buttonTapHandler)();
+@property (nonatomic) CGFloat buttonTitleYOffset;
 
-@property (nonatomic, copy) void (^tapLeftHandler)();
-@property (nonatomic, copy) void (^tapRightHandler)();
+@property (nonatomic) BOOL useDestinationButton;
 
 @end

@@ -21,6 +21,17 @@
     return self;
 }
 
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    
+    // Adjust compass position
+    UIView *compass = self.compassView_;
+    CGRect frame = compass.frame;
+    frame.origin.y = kControlViewHeight + 5;
+    frame.origin.x = CGRectGetWidth([UIScreen mainScreen].bounds) - (5 + CGRectGetWidth(frame));
+    compass.frame = frame;
+}
+
 - (void)handleLongPress:(UIGestureRecognizer *)gestureRecognizer {
     if (gestureRecognizer.state != UIGestureRecognizerStateBegan)
         return;
@@ -53,6 +64,10 @@
         // Pass address to view
         if (self.pinAddressLoadHandler) self.pinAddressLoadHandler(locatedAt);
     }];
+}
+
+- (UIView *)compassView_ {
+    return [self valueForKey:@"_compassView"];
 }
 
 @end

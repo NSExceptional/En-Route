@@ -9,9 +9,14 @@
 @import MapKit;
 
 
+static const CGFloat kControlViewHeight = 140;
+
+
 @interface ERMapView : MKMapView
 
 @property (nonatomic) MKPointAnnotation *droppedPinAnnotation;
 @property (nonatomic, copy) void (^pinAddressLoadHandler)(NSString *address);
+
+@property (readonly, nonatomic) UIView *compassView_;
 
 @end
