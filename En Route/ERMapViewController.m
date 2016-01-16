@@ -11,6 +11,7 @@
 
 @interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate>
 @property (nonatomic) CLLocationManager *locationManager;
+@property (nonatomic) NSMutableArray *POIs; //points of interest
 @end
 
 
@@ -45,22 +46,12 @@
     self.toolbarItems = @[userTrackingButton, spacer, list];
     
     //    self.navigationController.hidesBarsOnTap = YES;
- 
-    //route drawing
-    
-    
-    
-    
-    //local searches for restaurants
-    
-    
-    
-    
-    
     
     [self setupTextFields];
 }
 
+
+//shows routes
 - (void)showRoutesForStart:(MKPlacemark *)start end:(MKPlacemark *)end {
     MKMapItem *startLocation = [[MKMapItem alloc] initWithPlacemark:start];
     MKMapItem *endLocation = [[MKMapItem alloc] initWithPlacemark:end];
@@ -76,6 +67,21 @@
         
     }];
 }
+
+
+//local searches for restaurants
+- (void)searchWithCoord:(CLLocation *)location{
+    MKLocalSearchRequest *request = [MKLocalSearchRequest new];
+    request.naturalLanguageQuery = @"noms";
+    request.region = MKCoordinateRegionMakeWithDistance(location.coordinate, 800, 800);
+    
+    [[[MKLocalSearch alloc] initWithRequest:request] startWithCompletionHandler:^(MKLocalSearchResponse * response, NSError * error) {
+        [self.POIs addObjectsFromArray:response.mapItems];
+        
+    }];
+}
+
+
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
