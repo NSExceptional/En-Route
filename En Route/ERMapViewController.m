@@ -7,7 +7,7 @@
 //
 
 #import "ERMapViewController.h"
-
+#import "TBAlertController.h"
 
 @interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate>
 
@@ -17,6 +17,7 @@
 @property (nonatomic, readonly) UITextField *startTextField;
 @property (nonatomic, readonly) UITextField *endTextField;
 
+@property (nonatomic) NSMutableArray *POIs; //points of interest
 @end
 
 
@@ -38,22 +39,19 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    self.title = @"En Route";
+    
     // Locaiton manager is used to get location permissions
     self.locationManager = [CLLocationManager new];
     self.locationManager.delegate = self;
     
-    UIBarButtonItem *button = [[UIBarButtonItem alloc] initWithTitle:@"Clear" style:UIBarButtonItemStylePlain target:self action:@selector(clearButtonPressed)]; //targets self bc clear button
-    self.navigationItem.leftBarButtonItem = button; //clear button
-    
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Clear" style:UIBarButtonItemStylePlain target:self action:@selector(clearButtonPressed)];
     self.navigationController.toolbarHidden = NO;
-    self.title = @"En Route";
     
     MKUserTrackingBarButtonItem *userTrackingButton = [[MKUserTrackingBarButtonItem alloc] initWithMapView:self.mapView];
     UIBarButtonItem *list = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(showList)];
     UIBarButtonItem *spacer = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     self.toolbarItems = @[userTrackingButton, spacer, list];
-    
-    //    self.navigationController.hidesBarsOnTap = YES;
     
     [self setupTextFields];
 }
@@ -85,7 +83,6 @@
 #pragma mark - POI processing
 
 - (NSArray<CLLocation*> *)coordinatesAlongRoute:(MKRoute *)route {
-    
     NSMutableArray *points = [NSMutableArray array];
     for (NSInteger i = 0; i < route.polyline.pointCount; i++) {
         CLLocationCoordinate2D coord = MKCoordinateForMapPoint(route.polyline.points[i]);
@@ -95,6 +92,38 @@
     return points;
 }
 
+- (void)searchWithCoord:(CLLocation *)location {
+    MKLocalSearchRequest *request = [MKLocalSearchRequest new];
+    request.naturalLanguageQuery = @"food";
+    request.region = MKCoordinateRegionMakeWithDistance(location.coordinate, 800, 800);
+    
+    [[[MKLocalSearch alloc] initWithRequest:request] startWithCompletionHandler:^(MKLocalSearchResponse *response, NSError *error) {
+        if (!error && response) {
+            [self.POIs addObjectsFromArray:response.mapItems];
+        } else {
+            
+        }
+    }];
+}
+
+- (void)showRoutesForStart:(MKPlacemark *)start end:(MKPlacemark *)end {
+    MKMapItem *startLocation     = [[MKMapItem alloc] initWithPlacemark:start];
+    MKMapItem *endLocation       = [[MKMapItem alloc] initWithPlacemark:end];
+    
+    MKDirectionsRequest *request = [MKDirectionsRequest new];
+    request.source               = startLocation;
+    request.destination          = endLocation;
+    
+    MKDirections *directions     = [[MKDirections alloc] initWithRequest:request];
+    [directions calculateDirectionsWithCompletionHandler:^(MKDirectionsResponse *response, NSError *error) {
+        if (!error && response.routes.count) {
+            [self.mapView addOverlay:response.routes[0].polyline];
+        } else {
+            
+        }
+    }];
+}
+
 #pragma mark - CLLocationManagerDelegate, MKMapViewDelegate
 
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
@@ -102,7 +131,7 @@
     if (status == kCLAuthorizationStatusAuthorizedWhenInUse) {
         [self.mapView setUserTrackingMode:MKUserTrackingModeFollow animated:YES];
     } else {
-        // User denied location access
+        [[TBAlertController simpleOKAlertWithTitle:@"Enable location services" message:@"Allowing this app to use your location may improve your experience."] showFromViewController:self];
     }
 }
 
@@ -111,11 +140,19 @@
     if ([annotation isKindOfClass:[MKUserLocation class]]) {
         return [self.mapView viewForAnnotation:annotation];
     } else {
+        // TODO: reuse annotation views. see -[MKMapView dequeueReusableAnnotationViewWithIdentifier:
         MKPinAnnotationView *pin = [MKPinAnnotationView new];
         pin.animatesDrop = YES;
         pin.pinColor = MKPinAnnotationColorPurple;
         pin.canShowCallout = YES;
         pin.calloutOffset = CGPointMake(-8, 0);
+        
+        pin.leftCalloutAccessoryView = ({
+            UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 1, 1)];
+            view.backgroundColor = [UIColor blueColor];
+            view;
+        });
+        
         return pin;
     }
 }
