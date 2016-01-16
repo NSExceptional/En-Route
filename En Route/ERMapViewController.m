@@ -45,8 +45,36 @@
     self.toolbarItems = @[userTrackingButton, spacer, list];
     
     //    self.navigationController.hidesBarsOnTap = YES;
+ 
+    //route drawing
+    
+    
+    
+    
+    //local searches for restaurants
+    
+    
+    
+    
+    
     
     [self setupTextFields];
+}
+
+- (void)showRoutesForStart:(MKPlacemark *)start end:(MKPlacemark *)end {
+    MKMapItem *startLocation = [[MKMapItem alloc] initWithPlacemark:start];
+    MKMapItem *endLocation = [[MKMapItem alloc] initWithPlacemark:end];
+    MKDirectionsRequest *request = [MKDirectionsRequest new];
+    request.source = startLocation;
+    request.destination = destination;
+    MKDirections *directions = [[MKDirections alloc] initWithRequest:request];
+    [directions calculateDirectionsWithCompletionHandler:^(MKDirectionsResponse * _Nullable response, NSError * _Nullable error) {
+        self.mapView; //to display map
+        
+        //look in mapview.response
+        //look for different routes as well
+        
+    }];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -65,7 +93,7 @@
     self.navigationController.navigationBar.shadowImage     = [UIImage new];
     [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
     
-    
+ 
 }
 
 #pragma mark - Actions
