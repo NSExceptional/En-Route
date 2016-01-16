@@ -8,6 +8,12 @@
 
 #import "ERCalloutView.h"
 
+
+@interface ERCalloutView ()
+@property (nonatomic) UIButton *leftButton;
+@property (nonatomic) UIButton *rightButton;
+@end
+
 @implementation ERCalloutView
 
 + (instancetype)viewForAnnotation:(MKPinAnnotationView *)pin {
@@ -32,8 +38,24 @@
         [self addSubview:start];
         [self addSubview:end];
     }
-
+    
     return self;
+}
+
+- (void)setLeftColor:(UIColor *)leftColor {
+    self.leftButton.backgroundColor = leftColor;
+}
+
+- (UIColor *)leftColor {
+    return self.leftButton.backgroundColor;
+}
+
+- (void)setRightColor:(UIColor *)rightColor {
+    self.leftButton.backgroundColor = rightColor;
+}
+
+- (UIColor *)rightColor {
+    return self.rightButton.backgroundColor;
 }
 
 @end
