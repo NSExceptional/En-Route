@@ -12,6 +12,7 @@
 #import "ERAddressTextField.h"
 #import "ERLocalSearchQueue.h"
 #import "MKPlacemark+MKPointAnnotation.h"
+#import "TBTimer.h"
 
 
 static const CGFloat kTFHeight          = 28;
@@ -251,7 +252,8 @@ static const CGFloat kTFBottomPadding   = 12;
             [self.mapView addOverlays:[response.routes valueForKeyPath:@"@unionOfObjects.polyline"]];
             
             // Add annotations
-            [self searchRoute:response.routes.firstObject then:response.routes.mutableCopy];
+            [TBTimer startTimer];
+            [self searchRoute:response.routes.firstObject then:response.routes.mutableCopy completed:[NSMutableArray array]];
             
         } else {
             [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not get directions"] showFromViewController:self];
@@ -262,7 +264,7 @@ static const CGFloat kTFBottomPadding   = 12;
     }];
 }
 
-- (void)searchRoute:(MKRoute *)route then:(NSMutableArray *)alternates {
+- (void)searchRoute:(MKRoute *)route then:(NSMutableArray *)alternates completed:(NSMutableArray *)usedRoutes {
     if (!route) {
         self.searchQueue = nil;
         [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
@@ -271,10 +273,15 @@ static const CGFloat kTFBottomPadding   = 12;
         return;
     }
     
+    // Get coords, filter out already searched coords
     NSArray *coords = [self coordinatesAlongRoute:route];
+    NSMutableSet *filteredCoords = [NSMutableSet setWithArray:coords];
+    for (MKRoute *route in usedRoutes)
+        [filteredCoords minusSet:[NSSet setWithArray:[self coordinatesAlongRoute:route]]];
+    coords = filteredCoords.allObjects;
     
     // Perform search
-    self.searchQueue = self.searchQueue ?: [ERLocalSearchQueue queueWithQuery:@"food" radius:500];
+    self.searchQueue = self.searchQueue ?: [ERLocalSearchQueue queueWithQuery:@"food" radius:1000];
     [self.searchQueue searchWithCoords:coords loopCallback:^(NSArray *mapItems) {
         [self.latestPOIs addObjectsFromArray:mapItems];
     } completionCallback:^{
@@ -284,9 +291,10 @@ static const CGFloat kTFBottomPadding   = 12;
         [self.latestPOIs removeAllObjects];
         
         [alternates removeObject:route];
+        [usedRoutes addObject:route];
         
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(6 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [self searchRoute:alternates.firstObject then:alternates];
+            [self searchRoute:alternates.firstObject then:alternates completed:usedRoutes];
         });
     }];
 }
@@ -356,10 +364,13 @@ static const CGFloat kTFBottomPadding   = 12;
 }
 
 - (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        self.startTextField.text = @"Current location";
-        self.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
-        [self beginRouting];
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            self.startTextField.text = @"Current location";
+            self.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
+            [self beginRouting];
+        });
     });
 }
 
@@ -428,8 +439,8 @@ static const CGFloat kTFBottomPadding   = 12;
             
         } else {
             // For POIs
-            MKPlacemark *placemark = (id)annotation;
-            MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:placemark.pointAnnotation reuseIdentifier:@"poi"];
+            MKPointAnnotation *point = (id)annotation;
+            MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:point reuseIdentifier:@"poi"];
             pin.animatesDrop         = YES;
             pin.pinColor             = MKPinAnnotationColorPurple;
             pin.canShowCallout       = YES;

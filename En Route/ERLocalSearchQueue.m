@@ -7,14 +7,20 @@
 //
 
 #import "ERLocalSearchQueue.h"
+#import "TBTimer.h"
 
 
 @interface ERLocalSearchQueue ()
 @property (nonatomic          ) MKLocalSearchRequest *request;
 @property (nonatomic, readonly) NSMutableArray *locations;
+@property (nonatomic, readonly) NSTimer *timer;
+@property (nonatomic          ) NSInteger secondsLeft;
+
 @property (nonatomic          ) CGFloat delay;
+@property (nonatomic          ) NSInteger batchSize;
 @property (nonatomic          ) NSInteger failCount;
 @property (nonatomic          ) NSInteger successCount;
+@property (nonatomic          ) NSInteger total;
 
 @property (nonatomic, copy) void (^loopCallback)(NSArray *mapItems);
 @property (nonatomic, copy) void (^completion)();
@@ -39,10 +45,27 @@
         _locations = [NSMutableArray array];
         _request   = [MKLocalSearchRequest new];
         _request.naturalLanguageQuery = @"food";
-        _delay = .5;
+        _delay = 60;
+        _batchSize = 50;
+        
+        _timer = [NSTimer timerWithTimeInterval:60 target:self selector:@selector(decTimer) userInfo:nil repeats:YES];
     }
     
     return self;
+}
+
+- (void)decTimer {
+    self.secondsLeft--;
+    if (_secondsLeft < 0) {
+        _secondsLeft = 0;
+    }
+}
+
+- (void)setSecondsLeft:(NSInteger)secondsLeft {
+    if (_secondsLeft == 1 && secondsLeft == 0) {
+        _total -= 50;
+    }
+    _secondsLeft = secondsLeft;
 }
 
 - (void)searchWithCoords:(NSArray *)locations loopCallback:(void(^)(NSArray *mapItems))callback completionCallback:(void(^)())completion {
@@ -51,7 +74,15 @@
     self.completion = completion;
     
     [self filterLocations];
-    [self makeThreeRequests];
+    
+    if (_secondsLeft && _total > 50) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_secondsLeft+1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self makeBatchRequests];
+        });
+    } else {
+        [_timer fire];
+        [self makeBatchRequests];
+    }
 }
 
 - (void)cancelRequests {
@@ -73,13 +104,15 @@
     [self.locations setArray:newLocs.allObjects];
 }
 
-- (void)makeThreeRequests {
+- (void)makeBatchRequests {
     if (!self.locations.count) return;
     
-    NSInteger safeLoc = self.locations.count-3; if (safeLoc < 0) safeLoc = 0;
-    NSInteger safeLen = MIN(self.locations.count, 3);
+    NSInteger safeLoc = self.locations.count-_batchSize; if (safeLoc < 0) safeLoc = 0;
+    NSInteger safeLen = MIN(self.locations.count, _batchSize);
     NSArray *next = [self.locations subarrayWithRange:NSMakeRange(safeLoc, safeLen)];
     [self.locations removeObjectsInRange:NSMakeRange(safeLoc, safeLen)];
+    
+    _secondsLeft += 60;
     
     __block NSInteger i = safeLen;
     for (CLLocation *loc in next) {
@@ -92,18 +125,10 @@
                 self.loopCallback(response.mapItems);
             
             if (error) {
-                _failCount++;
-                _successCount = 0;
-                if (_failCount > 2) {
-                    _delay = MIN(_delay*2, 16);
-                    NSLog(@"T- %@ : Search failed, new delay: %@", @(self.locations.count), @(_delay));
-                }
+                NSLog(@"-------FAIL------- %@", @(++_total));
+                [TBTimer lap];
             } else {
-                _successCount++;
-                if (_successCount > 3) {
-                    _failCount = 0;
-                    _delay = MAX(.5, _delay/2);
-                }
+                NSLog(@"success: %@", @(++_total));
             }
             
             if (--i == 0) {
@@ -112,7 +137,7 @@
                     self.completion();
                 } else {
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                        [self makeThreeRequests];
+                        [self makeBatchRequests];
                     });
                 }
             }
