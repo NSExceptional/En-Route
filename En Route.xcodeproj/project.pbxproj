@@ -13,7 +13,7 @@
 		B468D8C61C49C33400AFC6A7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B468D8C51C49C33400AFC6A7 /* Assets.xcassets */; };
 		B468D8C91C49C33400AFC6A7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B468D8C71C49C33400AFC6A7 /* LaunchScreen.storyboard */; };
 		B468D8D21C49C42800AFC6A7 /* ERMapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8D11C49C42800AFC6A7 /* ERMapViewController.m */; };
-		B468D8D51C49DF9100AFC6A7 /* MKMapView+EnRouteExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8D41C49DF9100AFC6A7 /* MKMapView+EnRouteExtensions.m */; };
+		B471FAD91C49E70D005AAD9F /* ERMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = B471FAD81C49E70D005AAD9F /* ERMapView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,8 +27,8 @@
 		B468D8CA1C49C33400AFC6A7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B468D8D01C49C42800AFC6A7 /* ERMapViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERMapViewController.h; sourceTree = "<group>"; };
 		B468D8D11C49C42800AFC6A7 /* ERMapViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERMapViewController.m; sourceTree = "<group>"; };
-		B468D8D31C49DF9100AFC6A7 /* MKMapView+EnRouteExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MKMapView+EnRouteExtensions.h"; sourceTree = "<group>"; };
-		B468D8D41C49DF9100AFC6A7 /* MKMapView+EnRouteExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MKMapView+EnRouteExtensions.m"; sourceTree = "<group>"; };
+		B471FAD71C49E70D005AAD9F /* ERMapView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERMapView.h; sourceTree = "<group>"; };
+		B471FAD81C49E70D005AAD9F /* ERMapView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERMapView.m; sourceTree = "<group>"; };
 		EDDF7E5BC73E9E7F9D682952 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		EE0C598ED700E1D7913EB82D /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -87,8 +87,8 @@
 				B468D8BD1C49C33400AFC6A7 /* ERAppDelegate.m */,
 				B468D8D01C49C42800AFC6A7 /* ERMapViewController.h */,
 				B468D8D11C49C42800AFC6A7 /* ERMapViewController.m */,
-				B468D8D31C49DF9100AFC6A7 /* MKMapView+EnRouteExtensions.h */,
-				B468D8D41C49DF9100AFC6A7 /* MKMapView+EnRouteExtensions.m */,
+				B471FAD71C49E70D005AAD9F /* ERMapView.h */,
+				B471FAD81C49E70D005AAD9F /* ERMapView.m */,
 				B468D8C51C49C33400AFC6A7 /* Assets.xcassets */,
 				B468D8C71C49C33400AFC6A7 /* LaunchScreen.storyboard */,
 				B468D8CA1C49C33400AFC6A7 /* Info.plist */,
@@ -211,8 +211,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				B468D8D21C49C42800AFC6A7 /* ERMapViewController.m in Sources */,
+				B471FAD91C49E70D005AAD9F /* ERMapView.m in Sources */,
 				B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */,
-				B468D8D51C49DF9100AFC6A7 /* MKMapView+EnRouteExtensions.m in Sources */,
 				B468D8BB1C49C33400AFC6A7 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

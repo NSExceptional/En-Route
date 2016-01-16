@@ -7,12 +7,10 @@
 //
 
 #import "ERMapViewController.h"
-#import "MKMapView+EnRouteExtensions.h"
+
 
 @interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate>
-
 @property (nonatomic) CLLocationManager *locationManager;
-
 @end
 
 
@@ -20,7 +18,7 @@
 
 
 - (void)loadView {
-    self.view = [[MKMapView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    self.view = [[ERMapView alloc] initWithFrame:[UIScreen mainScreen].bounds];
     self.mapView.delegate = self;
 }
 
@@ -46,10 +44,9 @@
     UIBarButtonItem *spacer = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     self.toolbarItems = @[userTrackingButton, spacer, list];
     
-//    self.navigationController.hidesBarsOnTap = YES;
+    //    self.navigationController.hidesBarsOnTap = YES;
     
     [self setupTextFields];
-    [self setupMapView];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -71,12 +68,6 @@
     
 }
 
-- (void)setupMapView {
-    UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self.mapView action:@selector(handleLongPress:)];
-    longPress.minimumPressDuration = 0.2;
-    [self.mapView addGestureRecognizer:longPress];
-}
-
 #pragma mark - Actions
 
 - (void)clearButtonPressed {
@@ -95,6 +86,7 @@
     }
 }
 
+// Left this in this class because putting it in ERMapView caused the drop animation to disappear
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(nonnull id<MKAnnotation>)annotation {
     if ([annotation isKindOfClass:[MKUserLocation class]]) {
         return [self.mapView viewForAnnotation:annotation];
@@ -102,9 +94,10 @@
         MKPinAnnotationView *pin = [MKPinAnnotationView new];
         pin.animatesDrop = YES;
         pin.pinColor = MKPinAnnotationColorPurple;
+        pin.canShowCallout = YES;
+        pin.calloutOffset = CGPointMake(5, 0);
         return pin;
     }
-    
 }
 
 @end

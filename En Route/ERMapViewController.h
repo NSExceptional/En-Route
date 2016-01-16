@@ -7,8 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-@import MapKit;
-
+#import "ERMapView.h"
 
 @interface ERMapViewController : UIViewController
 
