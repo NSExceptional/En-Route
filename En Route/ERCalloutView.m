@@ -29,6 +29,7 @@
         _button.backgroundColor = [UIColor colorWithRed:0.600 green:0.000 blue:1.000 alpha:1.000];
         [_button setTitle:@"Start" forState:UIControlStateNormal];
         
+        
         _buttonTitleYOffset = 5;
         _button.titleEdgeInsets = UIEdgeInsetsMake(0, 0, _buttonTitleYOffset, 0);
         
@@ -36,19 +37,22 @@
         [self addSubview:_button];
         
         [_button addTarget:self action:@selector(didTapButton) forControlEvents:UIControlEventTouchUpInside];
+        self.useDestinationButton = self.useDestinationButton;
     }
     
     return self;
 }
 
 - (void)setUseDestinationButton:(BOOL)useDestinationButton {
-    if (_useDestinationButton == useDestinationButton) return;
     _useDestinationButton = useDestinationButton;
     
-    if (useDestinationButton)
+    if (useDestinationButton) {
         [_button setTitle:@"End" forState:UIControlStateNormal];
-    else
+        self.buttonColor = [[UIApplication sharedApplication].delegate window].tintColor;
+    } else {
         [_button setTitle:@"Start" forState:UIControlStateNormal];
+        self.buttonColor = [UIColor colorWithRed:0.263 green:0.835 blue:0.318 alpha:1.000];
+    }
 }
 
 - (void)setButtonTitleYOffset:(CGFloat)buttonTitleYOffset {

@@ -184,6 +184,13 @@ static BOOL trackUserInitially = YES;
 }
 
 - (void)beginRouting {
+    [self.mapView removeOverlays:self.mapView.overlays];
+    [self.mapView removeAnnotations:self.mapView.annotations];
+    [self.POIs removeAllObjects];
+    self.toolbarLabel.text = nil;
+    
+    [self updateButtons];
+    
     [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
     self.loadingResults = YES;
     [self updateNavigationItems];
