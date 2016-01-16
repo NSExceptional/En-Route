@@ -25,7 +25,9 @@
     
     [self.window makeKeyAndVisible];
     
-    [[FLEXManager sharedManager] showExplorer];
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:[FLEXManager sharedManager] action:@selector(showExplorer)];
+    tap.numberOfTouchesRequired = 3;
+    [self.window addGestureRecognizer:tap];
     
     return YES;
 }

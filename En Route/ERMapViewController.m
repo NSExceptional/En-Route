@@ -13,12 +13,15 @@
 #import "ERLocalSearchQueue.h"
 #import "MKPlacemark+MKPointAnnotation.h"
 #import "TBTimer.h"
+#import "ERListViewController.h"
 
 
 static const CGFloat kTFHeight          = 28;
 static const CGFloat kTFSidePadding     = 6;
 static const CGFloat kTFSpacing         = kTFSidePadding;
 static const CGFloat kTFBottomPadding   = 12;
+
+static BOOL trackUserInitially = YES;
 
 @interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate, UITextFieldDelegate>
 
@@ -31,6 +34,7 @@ static const CGFloat kTFBottomPadding   = 12;
 @property (nonatomic, readonly) UIBarButtonItem *clearButton;
 @property (nonatomic, readonly) UIBarButtonItem *routeButton;
 @property (nonatomic, readonly) UIBarButtonItem *listButton;
+@property (nonatomic, readonly) UILabel *toolbarLabel;
 
 @property (nonatomic) NSMutableSet *POIs;
 @property (nonatomic) NSMutableSet *latestPOIs;
@@ -38,7 +42,8 @@ static const CGFloat kTFBottomPadding   = 12;
 @property (nonatomic, readonly) NSArray *latestAnnotations;
 
 @property (nonatomic, readonly) BOOL hideButtons;
-@property (nonatomic) MKAnnotationView *userLocation;
+@property (nonatomic) MKAnnotationView *userLocationView;
+@property (nonatomic) MKUserLocation *userLocation;
 @property (nonatomic) MKAnnotationView *droppedPin;
 
 @property (nonatomic) BOOL loadingResults;
@@ -58,10 +63,10 @@ static const CGFloat kTFBottomPadding   = 12;
     CGFloat tfWidth = CGRectGetWidth([UIScreen mainScreen].bounds) - kTFSidePadding*2;
     CGFloat hairlineHeight = 1.f/[UIScreen mainScreen].scale;
     
-    _controlsBackgroundView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight]];
-    CGRect controlFrame = CGRectMake(0, 0, screenWidth, kControlViewHeight);
+    _controlsBackgroundView       = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight]];
+    CGRect controlFrame           = CGRectMake(0, 0, screenWidth, kControlViewHeight);
+    CGFloat viewHeight            = CGRectGetHeight(controlFrame);
     _controlsBackgroundView.frame = controlFrame;
-    CGFloat viewHeight = CGRectGetHeight(controlFrame);
     
     CGRect startFrame = CGRectMake(kTFSidePadding, (viewHeight-kTFBottomPadding) - kTFHeight*2 - kTFSpacing, tfWidth, kTFHeight);
     CGRect endFrame   = CGRectMake(kTFSidePadding, (viewHeight-kTFBottomPadding) - kTFHeight, tfWidth, kTFHeight);
@@ -74,6 +79,9 @@ static const CGFloat kTFBottomPadding   = 12;
     _startTextField.delegate = self;
     _endTextField.delegate   = self;
     
+    _toolbarLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 1, 1)];
+    _toolbarLabel.font = [UIFont systemFontOfSize:12];
+    
     UIView *hairline = ({
         UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, viewHeight - hairlineHeight, screenWidth, hairlineHeight)];
         view.backgroundColor = [UIColor colorWithWhite:0.000 alpha:0.301];
@@ -84,6 +92,14 @@ static const CGFloat kTFBottomPadding   = 12;
     [_controlsBackgroundView addSubview:_endTextField];
     [_controlsBackgroundView addSubview:hairline];
     [self.mapView addSubview:_controlsBackgroundView];
+    
+    NSString *rekt = [[NSUserDefaults standardUserDefaults] valueForKey:@"MapRekt"];
+    if (rekt) {
+        CGRect r = CGRectFromString(rekt);
+        self.mapView.visibleMapRect = *((MKMapRect*)&r);
+        self.mapView.userTrackingMode = MKUserTrackingModeNone;
+        trackUserInitially = NO;
+    }
 }
 
 - (ERMapView *)mapView {
@@ -105,7 +121,8 @@ static const CGFloat kTFBottomPadding   = 12;
     MKUserTrackingBarButtonItem *userTrackingButton = [[MKUserTrackingBarButtonItem alloc] initWithMapView:self.mapView];
     _listButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(showList)];
     UIBarButtonItem *spacer = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    self.toolbarItems = @[userTrackingButton, spacer, _listButton];
+    UIBarButtonItem *label = [[UIBarButtonItem alloc] initWithCustomView:_toolbarLabel];
+    self.toolbarItems = @[userTrackingButton, spacer, label, spacer, _listButton];
     
     // Hide keyboard on tap
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self.startTextField action:@selector(resignFirstResponder)];
@@ -149,6 +166,7 @@ static const CGFloat kTFBottomPadding   = 12;
     
     [self.mapView removeAnnotations:self.mapView.annotations];
     [self.POIs removeAllObjects];
+    self.toolbarLabel.text = nil;
     
     [self updateButtons];
 }
@@ -159,6 +177,10 @@ static const CGFloat kTFBottomPadding   = 12;
 }
 
 - (void)showList {
+    UITableViewController *list = [ERListViewController listItems:self.POIs.allObjects currentLocation:[self.userLocation valueForKey:@"location"]];
+    UIViewController *nav = [[UINavigationController alloc] initWithRootViewController:list];
+    nav.modalPresentationStyle = UIModalPresentationOverCurrentContext;
+    [self presentViewController:nav animated:YES completion:nil];
 }
 
 - (void)beginRouting {
@@ -175,7 +197,7 @@ static const CGFloat kTFBottomPadding   = 12;
 
 - (void)getStartPlacemark:(void(^)(MKPlacemark *start))callback {
     if ([self.startTextField.text isEqualToString:@"Current location"]) {
-        callback([[MKPlacemark alloc] initWithCoordinate:[(id)self.userLocation.annotation coordinate] addressDictionary:nil]);
+        callback([[MKPlacemark alloc] initWithCoordinate:[[self.userLocation valueForKey:@"location"] coordinate] addressDictionary:nil]);
     } else {
         [[CLGeocoder new] geocodeAddressString:self.startTextField.text completionHandler:^(NSArray *placemark, NSError *error) {
             if (placemark && placemark.count) {
@@ -193,7 +215,7 @@ static const CGFloat kTFBottomPadding   = 12;
 
 - (void)getEndPlacemark:(void(^)(MKPlacemark *end))callback {
     if ([self.endTextField.text isEqualToString:@"Current location"]) {
-        callback([[MKPlacemark alloc] initWithCoordinate:[(id)self.userLocation.annotation coordinate] addressDictionary:nil]);
+        callback([[MKPlacemark alloc] initWithCoordinate:[[self.userLocation valueForKey:@"location"] coordinate] addressDictionary:nil]);
     } else {
         [[CLGeocoder new] geocodeAddressString:self.endTextField.text completionHandler:^(NSArray *placemark, NSError *error) {
             if (placemark && placemark.count) {
@@ -209,7 +231,7 @@ static const CGFloat kTFBottomPadding   = 12;
     }
 }
 
-#pragma mark - POI processing
+#pragma mark - Getters
 
 - (NSArray *)latestAnnotations {
     return [[self.latestPOIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"] valueForKeyPath:@"@unionOfObjects.pointAnnotation"];
@@ -218,6 +240,12 @@ static const CGFloat kTFBottomPadding   = 12;
 - (NSArray *)annotations {
     return [[self.POIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"] valueForKeyPath:@"@unionOfObjects.pointAnnotation"];
 }
+
+- (MKUserLocation *)userLocation {
+    return (id)self.userLocationView.annotation;
+}
+
+#pragma mark - POI processing
 
 - (NSArray<CLLocation*> *)coordinatesAlongRoute:(MKRoute *)route {
     NSMutableArray *points = [NSMutableArray array];
@@ -290,6 +318,10 @@ static const CGFloat kTFBottomPadding   = 12;
         [self.mapView addAnnotations:self.latestAnnotations];
         [self.latestPOIs removeAllObjects];
         
+        self.toolbarLabel.text = [NSString stringWithFormat:@"%@ restaurants along your route", @(self.POIs.count)];
+        [self.toolbarLabel sizeToFit];
+        self.listButton.enabled = self.POIs.count > 0;
+        
         [alternates removeObject:route];
         [usedRoutes addObject:route];
         
@@ -314,16 +346,16 @@ static const CGFloat kTFBottomPadding   = 12;
     [self updateNavigationItems];
     
     if (self.hideButtons) {
-        self.userLocation.leftCalloutAccessoryView = nil;
+        self.userLocationView.leftCalloutAccessoryView = nil;
         self.droppedPin.leftCalloutAccessoryView = nil;
     } else {
         
         // User location button
-        ERCalloutView *userCalloutView       = [ERCalloutView viewForAnnotation:self.userLocation];
+        ERCalloutView *userCalloutView       = [ERCalloutView viewForAnnotation:self.userLocationView];
         userCalloutView.buttonTitleYOffset   += 5;
         userCalloutView.useDestinationButton = self.startTextField.text.length > 0;
         userCalloutView.buttonTapHandler     = ^{
-            [self.mapView deselectAnnotation:self.userLocation.annotation animated:YES];
+            [self.mapView deselectAnnotation:self.userLocationView.annotation animated:YES];
             if (self.startTextField.text.length > 0) {
                 self.endTextField.text = @"Current location";
             } else {
@@ -332,7 +364,7 @@ static const CGFloat kTFBottomPadding   = 12;
             
             [self updateButtons];
         };
-        self.userLocation.leftCalloutAccessoryView = userCalloutView;
+        self.userLocationView.leftCalloutAccessoryView = userCalloutView;
         
         // Dropped pin button
         ERCalloutView *droppedPinButton       = [ERCalloutView viewForAnnotation:self.droppedPin];
@@ -357,29 +389,30 @@ static const CGFloat kTFBottomPadding   = 12;
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
     // User granted location access
     if (status == kCLAuthorizationStatusAuthorizedWhenInUse) {
-        [self.mapView setUserTrackingMode:MKUserTrackingModeFollow animated:YES];
+        if (trackUserInitially)
+            [self.mapView setUserTrackingMode:MKUserTrackingModeFollow animated:YES];
     } else {
         [[TBAlertController simpleOKAlertWithTitle:@"Enable location services" message:@"Allowing this app to use your location may improve your experience."] showFromViewController:self];
     }
 }
 
-- (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            self.startTextField.text = @"Current location";
-            self.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
-            [self beginRouting];
-        });
-    });
-}
+//- (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
+//    static dispatch_once_t onceToken;
+//    dispatch_once(&onceToken, ^{
+//        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//            self.startTextField.text = @"Current location";
+//            self.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
+//            [self beginRouting];
+//        });
+//    });
+//}
 
 // Left this in this class because putting it in ERMapView caused the drop animation to disappear
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(nonnull id<MKAnnotation>)annotation {
     
     if ([annotation isKindOfClass:[MKUserLocation class]]) {
         MKPinAnnotationView *user = [[NSClassFromString(@"MKModernUserLocationView") alloc] initWithAnnotation:annotation reuseIdentifier:@"user"];
-        self.userLocation = user;
+        self.userLocationView = user;
         
         // Hide buttons if both fields are full
         if (!self.hideButtons) {
@@ -442,7 +475,7 @@ static const CGFloat kTFBottomPadding   = 12;
             MKPointAnnotation *point = (id)annotation;
             MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:point reuseIdentifier:@"poi"];
             pin.animatesDrop         = YES;
-            pin.pinColor             = MKPinAnnotationColorPurple;
+            pin.pinTintColor         = [UIColor colorWithRed:0.259 green:0.812 blue:0.816 alpha:1.000];
             pin.canShowCallout       = YES;
             pin.calloutOffset        = CGPointMake(-8, 0);
             
@@ -456,6 +489,10 @@ static const CGFloat kTFBottomPadding   = 12;
     renderer.strokeColor = [UIColor colorWithRed:0.000 green:0.550 blue:1.000 alpha:1.000];
     renderer.lineWidth = 7;
     return renderer;
+}
+
+- (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
+    [[NSUserDefaults standardUserDefaults] setValue:MKStringFromMapRect(self.mapView.visibleMapRect) forKey:@"MapRekt"];
 }
 
 #pragma mark - UITextFieldDelegate

@@ -19,6 +19,12 @@
 		B471FAD91C49E70D005AAD9F /* ERMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = B471FAD81C49E70D005AAD9F /* ERMapView.m */; };
 		B490FBE11C4A2B2400717275 /* ERAddressTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = B490FBE01C4A2B2400717275 /* ERAddressTextField.m */; };
 		B490FBE71C4A7ACC00717275 /* ERLocalSearchQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = B490FBE61C4A7ACC00717275 /* ERLocalSearchQueue.m */; };
+		B4BE533D1C4AD0CE005F8216 /* ERListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BE533C1C4AD0CE005F8216 /* ERListViewController.m */; };
+		B4BE53401C4AD0E7005F8216 /* ERListItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BE533F1C4AD0E7005F8216 /* ERListItemCell.m */; };
+		B4BE53431C4AD0FA005F8216 /* ERListActivityCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BE53421C4AD0FA005F8216 /* ERListActivityCell.m */; };
+		B4BE53451C4AD29E005F8216 /* ListItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = B4BE53441C4AD29E005F8216 /* ListItemCell.xib */; };
+		B4BE53471C4AD413005F8216 /* ListActivityCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = B4BE53461C4AD413005F8216 /* ListActivityCell.xib */; };
+		B4BE534A1C4AD6C6005F8216 /* NSIndexPath+Util.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BE53491C4AD6C6005F8216 /* NSIndexPath+Util.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +50,16 @@
 		B490FBE01C4A2B2400717275 /* ERAddressTextField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERAddressTextField.m; sourceTree = "<group>"; };
 		B490FBE51C4A7ACC00717275 /* ERLocalSearchQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERLocalSearchQueue.h; sourceTree = "<group>"; };
 		B490FBE61C4A7ACC00717275 /* ERLocalSearchQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERLocalSearchQueue.m; sourceTree = "<group>"; };
+		B4BE533B1C4AD0CE005F8216 /* ERListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERListViewController.h; sourceTree = "<group>"; };
+		B4BE533C1C4AD0CE005F8216 /* ERListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERListViewController.m; sourceTree = "<group>"; };
+		B4BE533E1C4AD0E7005F8216 /* ERListItemCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERListItemCell.h; sourceTree = "<group>"; };
+		B4BE533F1C4AD0E7005F8216 /* ERListItemCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERListItemCell.m; sourceTree = "<group>"; };
+		B4BE53411C4AD0FA005F8216 /* ERListActivityCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERListActivityCell.h; sourceTree = "<group>"; };
+		B4BE53421C4AD0FA005F8216 /* ERListActivityCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERListActivityCell.m; sourceTree = "<group>"; };
+		B4BE53441C4AD29E005F8216 /* ListItemCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ListItemCell.xib; sourceTree = "<group>"; };
+		B4BE53461C4AD413005F8216 /* ListActivityCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ListActivityCell.xib; sourceTree = "<group>"; };
+		B4BE53481C4AD6C6005F8216 /* NSIndexPath+Util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSIndexPath+Util.h"; sourceTree = "<group>"; };
+		B4BE53491C4AD6C6005F8216 /* NSIndexPath+Util.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSIndexPath+Util.m"; sourceTree = "<group>"; };
 		EDDF7E5BC73E9E7F9D682952 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		EE0C598ED700E1D7913EB82D /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -112,8 +128,18 @@
 				B490FBE61C4A7ACC00717275 /* ERLocalSearchQueue.m */,
 				B420DD761C4A9BDD00AD56A6 /* MKPlacemark+MKPointAnnotation.h */,
 				B420DD771C4A9BDD00AD56A6 /* MKPlacemark+MKPointAnnotation.m */,
+				B4BE53481C4AD6C6005F8216 /* NSIndexPath+Util.h */,
+				B4BE53491C4AD6C6005F8216 /* NSIndexPath+Util.m */,
 				B420DD791C4AB96000AD56A6 /* TBTimer.h */,
 				B420DD7A1C4AB96000AD56A6 /* TBTimer.m */,
+				B4BE533B1C4AD0CE005F8216 /* ERListViewController.h */,
+				B4BE533C1C4AD0CE005F8216 /* ERListViewController.m */,
+				B4BE533E1C4AD0E7005F8216 /* ERListItemCell.h */,
+				B4BE533F1C4AD0E7005F8216 /* ERListItemCell.m */,
+				B4BE53411C4AD0FA005F8216 /* ERListActivityCell.h */,
+				B4BE53421C4AD0FA005F8216 /* ERListActivityCell.m */,
+				B4BE53441C4AD29E005F8216 /* ListItemCell.xib */,
+				B4BE53461C4AD413005F8216 /* ListActivityCell.xib */,
 				B468D8C51C49C33400AFC6A7 /* Assets.xcassets */,
 				B468D8C71C49C33400AFC6A7 /* LaunchScreen.storyboard */,
 				B468D8CA1C49C33400AFC6A7 /* Info.plist */,
@@ -192,6 +218,8 @@
 			files = (
 				B468D8C91C49C33400AFC6A7 /* LaunchScreen.storyboard in Resources */,
 				B468D8C61C49C33400AFC6A7 /* Assets.xcassets in Resources */,
+				B4BE53471C4AD413005F8216 /* ListActivityCell.xib in Resources */,
+				B4BE53451C4AD29E005F8216 /* ListItemCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -241,9 +269,13 @@
 				B468D8D21C49C42800AFC6A7 /* ERMapViewController.m in Sources */,
 				B471FAD91C49E70D005AAD9F /* ERMapView.m in Sources */,
 				B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */,
+				B4BE534A1C4AD6C6005F8216 /* NSIndexPath+Util.m in Sources */,
+				B4BE53401C4AD0E7005F8216 /* ERListItemCell.m in Sources */,
 				B468D8BB1C49C33400AFC6A7 /* main.m in Sources */,
 				B420DD7B1C4AB96000AD56A6 /* TBTimer.m in Sources */,
 				B490FBE71C4A7ACC00717275 /* ERLocalSearchQueue.m in Sources */,
+				B4BE533D1C4AD0CE005F8216 /* ERListViewController.m in Sources */,
+				B4BE53431C4AD0FA005F8216 /* ERListActivityCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
