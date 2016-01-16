@@ -8,6 +8,15 @@
 
 #import "ERMapViewController.h"
 
+
 @implementation ERMapViewController
+
+- (void)loadView {
+    self.view = [[MKMapView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+}
+
+- (MKMapView *)mapView {
+    return (id)self.view;
+}
 
 @end

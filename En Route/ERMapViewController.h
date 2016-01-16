@@ -7,7 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
+@import MapKit;
+
 
 @interface ERMapViewController : UIViewController
 
+@property (nonatomic, readonly) MKMapView *mapView;
+
 @end
+
