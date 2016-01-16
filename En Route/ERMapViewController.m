@@ -20,4 +20,17 @@
     return (id)self.view;
 }
 
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    UIBarButtonItem *button = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonItemStylePlain target:self action:@selector(clearButtonPressed)]; //targets self bc clear button
+    self.navigationItem.leftBarButtonItem = button; //clear button
+    
+    self.navigationController.toolbarHidden = NO;
+    self.title = @"En Route";
+}
+
+- (void)clearButtonPressed {
+    
+}
 @end
