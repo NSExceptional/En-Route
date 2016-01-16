@@ -28,6 +28,7 @@
     CGPoint touchPoint = [gestureRecognizer locationInView:self];
     CLLocationCoordinate2D coords = [self convertPoint:touchPoint toCoordinateFromView:self];
     
+    // Create pin
     MKPointAnnotation *point = [MKPointAnnotation new];
     point.coordinate = coords;
     point.title = @"Dropped Pin";

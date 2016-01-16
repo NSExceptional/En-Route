@@ -10,7 +10,13 @@
 
 
 @interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate>
+
 @property (nonatomic) CLLocationManager *locationManager;
+
+@property (nonatomic, readonly) UIVisualEffectView *controlsBackgroundView;
+@property (nonatomic, readonly) UITextField *startTextField;
+@property (nonatomic, readonly) UITextField *endTextField;
+
 @end
 
 
@@ -20,6 +26,9 @@
 - (void)loadView {
     self.view = [[ERMapView alloc] initWithFrame:[UIScreen mainScreen].bounds];
     self.mapView.delegate = self;
+    
+    _controlsBackgroundView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight]];
+    
 }
 
 - (MKMapView *)mapView {
@@ -55,7 +64,7 @@
     [self.locationManager requestWhenInUseAuthorization];
 }
 
-#pragma mark View customization
+#pragma mark - View customization
 
 - (void)setupTextFields {
     // Make navigation bar transparent
@@ -64,8 +73,6 @@
     self.navigationController.navigationBar.translucent     = YES;
     self.navigationController.navigationBar.shadowImage     = [UIImage new];
     [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
-    
-    
 }
 
 #pragma mark - Actions
@@ -73,6 +80,19 @@
 - (void)clearButtonPressed {
 }
 - (void)showList {
+}
+
+#pragma mark - POI processing
+
+- (NSArray<CLLocation*> *)coordinatesAlongRoute:(MKRoute *)route {
+    
+    NSMutableArray *points = [NSMutableArray array];
+    for (NSInteger i = 0; i < route.polyline.pointCount; i++) {
+        CLLocationCoordinate2D coord = MKCoordinateForMapPoint(route.polyline.points[i]);
+        [points addObject:[[CLLocation alloc] initWithLatitude:coord.latitude longitude:coord.longitude]];
+    }
+    
+    return points;
 }
 
 #pragma mark - CLLocationManagerDelegate, MKMapViewDelegate
@@ -95,7 +115,7 @@
         pin.animatesDrop = YES;
         pin.pinColor = MKPinAnnotationColorPurple;
         pin.canShowCallout = YES;
-        pin.calloutOffset = CGPointMake(5, 0);
+        pin.calloutOffset = CGPointMake(-8, 0);
         return pin;
     }
 }
