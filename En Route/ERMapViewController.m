@@ -7,8 +7,9 @@
 //
 
 #import "ERMapViewController.h"
+#import "MKMapView+EnRouteExtensions.h"
 
-@interface ERMapViewController () <CLLocationManagerDelegate>
+@interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate>
 
 @property (nonatomic) CLLocationManager *locationManager;
 
@@ -20,6 +21,7 @@
 
 - (void)loadView {
     self.view = [[MKMapView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    self.mapView.delegate = self;
 }
 
 - (MKMapView *)mapView {
@@ -40,14 +42,14 @@
     self.title = @"En Route";
     
     MKUserTrackingBarButtonItem *userTrackingButton = [[MKUserTrackingBarButtonItem alloc] initWithMapView:self.mapView];
-    self.toolbarItems = @[userTrackingButton];
-    
-    self.navigationController.hidesBarsOnTap = YES;
     UIBarButtonItem *list = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(showList)];
-}
-
-- (void)showList {
+    UIBarButtonItem *spacer = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
+    self.toolbarItems = @[userTrackingButton, spacer, list];
     
+//    self.navigationController.hidesBarsOnTap = YES;
+    
+    [self setupTextFields];
+    [self setupMapView];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -56,10 +58,33 @@
     [self.locationManager requestWhenInUseAuthorization];
 }
 
-- (void)clearButtonPressed {
+#pragma mark View customization
+
+- (void)setupTextFields {
+    // Make navigation bar transparent
+    self.navigationController.navigationBar.backgroundColor = [UIColor clearColor];
+    self.navigationController.navigationBar.barTintColor    = [UIColor clearColor];
+    self.navigationController.navigationBar.translucent     = YES;
+    self.navigationController.navigationBar.shadowImage     = [UIImage new];
+    [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
+    
+    
 }
 
-#pragma mark - CLLocationManagerDelegate
+- (void)setupMapView {
+    UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self.mapView action:@selector(handleLongPress:)];
+    longPress.minimumPressDuration = 0.2;
+    [self.mapView addGestureRecognizer:longPress];
+}
+
+#pragma mark - Actions
+
+- (void)clearButtonPressed {
+}
+- (void)showList {
+}
+
+#pragma mark - CLLocationManagerDelegate, MKMapViewDelegate
 
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
     // User granted location access
@@ -68,6 +93,18 @@
     } else {
         // User denied location access
     }
+}
+
+- (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(nonnull id<MKAnnotation>)annotation {
+    if ([annotation isKindOfClass:[MKUserLocation class]]) {
+        return [self.mapView viewForAnnotation:annotation];
+    } else {
+        MKPinAnnotationView *pin = [MKPinAnnotationView new];
+        pin.animatesDrop = YES;
+        pin.pinColor = MKPinAnnotationColorPurple;
+        return pin;
+    }
+    
 }
 
 @end
