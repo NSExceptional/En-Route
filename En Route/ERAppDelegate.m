@@ -7,7 +7,7 @@
 //
 
 #import "ERAppDelegate.h"
-
+#import "ERMapViewController.h"
 
 
 @interface ERAppDelegate ()
@@ -17,7 +17,7 @@
 
 - (BOOL)application:(UIApplication *)application willFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-    self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:nil];
+    self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[ERMapViewController new]];
     return YES;
 }
 
