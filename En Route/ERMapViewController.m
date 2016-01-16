@@ -43,6 +43,11 @@
     self.toolbarItems = @[userTrackingButton];
     
     self.navigationController.hidesBarsOnTap = YES;
+    UIBarButtonItem *list = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(showList)];
+}
+
+- (void)showList {
+    
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -52,7 +57,6 @@
 }
 
 - (void)clearButtonPressed {
-    
 }
 
 #pragma mark - CLLocationManagerDelegate
