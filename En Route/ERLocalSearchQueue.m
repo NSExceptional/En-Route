@@ -76,7 +76,7 @@
 - (void)makeThreeRequests {
     if (!self.locations.count) return;
     
-    NSInteger safeLoc = MIN(0, self.locations.count-3);
+    NSInteger safeLoc = self.locations.count-3; if (safeLoc < 0) safeLoc = 0;
     NSInteger safeLen = MIN(self.locations.count, 3);
     NSArray *next = [self.locations subarrayWithRange:NSMakeRange(safeLoc, safeLen)];
     [self.locations removeObjectsInRange:NSMakeRange(safeLoc, safeLen)];
@@ -91,6 +91,21 @@
             if (self.loopCallback)
                 self.loopCallback(response.mapItems);
             
+            if (error) {
+                _failCount++;
+                _successCount = 0;
+                if (_failCount > 2) {
+                    _delay = MIN(_delay*2, 16);
+                    NSLog(@"T- %@ : Search failed, new delay: %@", @(self.locations.count), @(_delay));
+                }
+            } else {
+                _successCount++;
+                if (_successCount > 3) {
+                    _failCount = 0;
+                    _delay = MAX(.5, _delay/2);
+                }
+            }
+            
             if (--i == 0) {
                 // Last one
                 if (self.locations.count == 0 && self.completion) {
@@ -98,22 +113,8 @@
                 } else {
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                         [self makeThreeRequests];
-                        _delay = MAX(.25, _delay - 2);
                     });
                 }
-            }
-            
-            if (error) {
-                _failCount++;
-                _successCount = 0;
-                if (_failCount > 1) {
-                    _delay = MIN(_delay + 1, 5);
-                    NSLog(@"T- %@ : Search failed, new delay: %@", @(self.locations.count), @(_delay));
-                }
-            } else {
-                _successCount++;
-                if (_successCount > 3)
-                    _failCount = 0;
             }
         }];
     }

@@ -7,6 +7,7 @@
 //
 
 #import "ERMapView.h"
+#import "MKPlacemark+MKPointAnnotation.h"
 
 @implementation ERMapView
 
@@ -59,10 +60,11 @@
     
     [ceo reverseGeocodeLocation:loc completionHandler:^(NSArray *placemarks, NSError *error) {
         CLPlacemark *placemark = placemarks[0];
-        NSString *locatedAt = [[placemark.addressDictionary valueForKey:@"FormattedAddressLines"] componentsJoinedByString:@", "];
-        self.droppedPinAnnotation.subtitle = locatedAt;
+        self.droppedPinAnnotation.subtitle = placemark.formattedAddress;
+        
         // Pass address to view
-        if (self.pinAddressLoadHandler) self.pinAddressLoadHandler(locatedAt);
+        if (self.pinAddressLoadHandler)
+            self.pinAddressLoadHandler(self.droppedPinAnnotation.subtitle);
     }];
 }
 

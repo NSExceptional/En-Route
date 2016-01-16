@@ -11,6 +11,7 @@
 #import "ERCalloutView.h"
 #import "ERAddressTextField.h"
 #import "ERLocalSearchQueue.h"
+#import "MKPlacemark+MKPointAnnotation.h"
 
 
 static const CGFloat kTFHeight          = 28;
@@ -210,11 +211,11 @@ static const CGFloat kTFBottomPadding   = 12;
 #pragma mark - POI processing
 
 - (NSArray *)latestAnnotations {
-    return [self.latestPOIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"];
+    return [[self.latestPOIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"] valueForKeyPath:@"@unionOfObjects.pointAnnotation"];
 }
 
 - (NSArray *)annotations {
-    return [self.POIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"];
+    return [[self.POIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"] valueForKeyPath:@"@unionOfObjects.pointAnnotation"];
 }
 
 - (NSArray<CLLocation*> *)coordinatesAlongRoute:(MKRoute *)route {
@@ -365,17 +366,7 @@ static const CGFloat kTFBottomPadding   = 12;
 // Left this in this class because putting it in ERMapView caused the drop animation to disappear
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(nonnull id<MKAnnotation>)annotation {
     
-    if ([annotation class] == [MKPlacemark class]) {
-        // For POIs
-        MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"poi"];
-        pin.animatesDrop         = YES;
-        pin.pinColor             = MKPinAnnotationColorPurple;
-        pin.canShowCallout       = YES;
-        pin.calloutOffset        = CGPointMake(-8, 0);
-        
-        return pin;
-        
-    } else if ([annotation isKindOfClass:[MKUserLocation class]]) {
+    if ([annotation isKindOfClass:[MKUserLocation class]]) {
         MKPinAnnotationView *user = [[NSClassFromString(@"MKModernUserLocationView") alloc] initWithAnnotation:annotation reuseIdentifier:@"user"];
         self.userLocation = user;
         
@@ -401,37 +392,51 @@ static const CGFloat kTFBottomPadding   = 12;
         return user;
         
     } else {
-        // MKPointAnnotation class, for dropped pins
+        // MKPointAnnotation class, for dropped pins and restaurants
+        MKPointAnnotation *point = (id)annotation;
         
-        // TODO: reuse annotation views. see -[MKMapView dequeueReusableAnnotationViewWithIdentifier:
-        MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"dropped"];
-        pin.animatesDrop         = YES;
-        pin.pinColor             = MKPinAnnotationColorRed;
-        pin.canShowCallout       = YES;
-        pin.calloutOffset        = CGPointMake(-8, 0);
-        self.droppedPin = pin;
-        
-        self.mapView.pinAddressLoadHandler = ^(NSString *address) {
+        if ([point.title isEqualToString:@"Dropped Pin"]) {
+            // TODO: reuse annotation views. see -[MKMapView dequeueReusableAnnotationViewWithIdentifier:
+            MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"dropped"];
+            pin.animatesDrop         = YES;
+            pin.pinColor             = MKPinAnnotationColorRed;
+            pin.canShowCallout       = YES;
+            pin.calloutOffset        = CGPointMake(-8, 0);
+            self.droppedPin = pin;
             
-            // Hide buttons if both fields are full
-            if (!self.hideButtons) {
-                ERCalloutView *calloutView       = [ERCalloutView viewForAnnotation:pin];
-                calloutView.useDestinationButton = self.startTextField.text.length > 0;
-                pin.leftCalloutAccessoryView     = calloutView;
-                calloutView.buttonTapHandler     = ^{
-                    [self.mapView deselectAnnotation:annotation animated:YES];
-                    if (self.startTextField.text.length > 0) {
-                        self.endTextField.text = address;
-                    } else {
-                        self.startTextField.text = address;
-                    }
-                    
-                    [self updateButtons];
-                };
-            }
-        };
-        
-        return pin;
+            self.mapView.pinAddressLoadHandler = ^(NSString *address) {
+                
+                // Hide buttons if both fields are full
+                if (!self.hideButtons) {
+                    ERCalloutView *calloutView       = [ERCalloutView viewForAnnotation:pin];
+                    calloutView.useDestinationButton = self.startTextField.text.length > 0;
+                    pin.leftCalloutAccessoryView     = calloutView;
+                    calloutView.buttonTapHandler     = ^{
+                        [self.mapView deselectAnnotation:annotation animated:YES];
+                        if (self.startTextField.text.length > 0) {
+                            self.endTextField.text = address;
+                        } else {
+                            self.startTextField.text = address;
+                        }
+                        
+                        [self updateButtons];
+                    };
+                }
+            };
+            
+            return pin;
+            
+        } else {
+            // For POIs
+            MKPlacemark *placemark = (id)annotation;
+            MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:placemark.pointAnnotation reuseIdentifier:@"poi"];
+            pin.animatesDrop         = YES;
+            pin.pinColor             = MKPinAnnotationColorPurple;
+            pin.canShowCallout       = YES;
+            pin.calloutOffset        = CGPointMake(-8, 0);
+            
+            return pin;
+        }
     }
 }
 

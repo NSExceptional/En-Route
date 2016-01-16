@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		6DEB0F8991A83810D51031FE /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EE0C598ED700E1D7913EB82D /* libPods.a */; };
 		85B313CC1C4A18F800AC665E /* ERCalloutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 85B313CB1C4A18F800AC665E /* ERCalloutView.m */; };
+		B420DD781C4A9BDD00AD56A6 /* MKPlacemark+MKPointAnnotation.m in Sources */ = {isa = PBXBuildFile; fileRef = B420DD771C4A9BDD00AD56A6 /* MKPlacemark+MKPointAnnotation.m */; };
 		B468D8BB1C49C33400AFC6A7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8BA1C49C33400AFC6A7 /* main.m */; };
 		B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8BD1C49C33400AFC6A7 /* ERAppDelegate.m */; };
 		B468D8C61C49C33400AFC6A7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B468D8C51C49C33400AFC6A7 /* Assets.xcassets */; };
@@ -23,6 +24,8 @@
 		33393FC2D02729A40CD512E1 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		85B313CA1C4A18F800AC665E /* ERCalloutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERCalloutView.h; sourceTree = "<group>"; };
 		85B313CB1C4A18F800AC665E /* ERCalloutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERCalloutView.m; sourceTree = "<group>"; };
+		B420DD761C4A9BDD00AD56A6 /* MKPlacemark+MKPointAnnotation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MKPlacemark+MKPointAnnotation.h"; sourceTree = "<group>"; };
+		B420DD771C4A9BDD00AD56A6 /* MKPlacemark+MKPointAnnotation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MKPlacemark+MKPointAnnotation.m"; sourceTree = "<group>"; };
 		B468D8B61C49C33400AFC6A7 /* En Route.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "En Route.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B468D8BA1C49C33400AFC6A7 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		B468D8BC1C49C33400AFC6A7 /* ERAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ERAppDelegate.h; sourceTree = "<group>"; };
@@ -104,6 +107,8 @@
 				B490FBE01C4A2B2400717275 /* ERAddressTextField.m */,
 				B490FBE51C4A7ACC00717275 /* ERLocalSearchQueue.h */,
 				B490FBE61C4A7ACC00717275 /* ERLocalSearchQueue.m */,
+				B420DD761C4A9BDD00AD56A6 /* MKPlacemark+MKPointAnnotation.h */,
+				B420DD771C4A9BDD00AD56A6 /* MKPlacemark+MKPointAnnotation.m */,
 				B468D8C51C49C33400AFC6A7 /* Assets.xcassets */,
 				B468D8C71C49C33400AFC6A7 /* LaunchScreen.storyboard */,
 				B468D8CA1C49C33400AFC6A7 /* Info.plist */,
@@ -227,6 +232,7 @@
 			files = (
 				B490FBE11C4A2B2400717275 /* ERAddressTextField.m in Sources */,
 				85B313CC1C4A18F800AC665E /* ERCalloutView.m in Sources */,
+				B420DD781C4A9BDD00AD56A6 /* MKPlacemark+MKPointAnnotation.m in Sources */,
 				B468D8D21C49C42800AFC6A7 /* ERMapViewController.m in Sources */,
 				B471FAD91C49E70D005AAD9F /* ERMapView.m in Sources */,
 				B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */,

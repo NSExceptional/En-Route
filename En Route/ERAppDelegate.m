@@ -11,6 +11,8 @@
 
 #import "FLEXManager.h"
 
+#import "MirrorKit.h"
+
 @interface ERAppDelegate ()
 @end
 
