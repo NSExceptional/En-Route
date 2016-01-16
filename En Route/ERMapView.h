@@ -12,5 +12,6 @@
 @interface ERMapView : MKMapView
 
 @property (nonatomic) MKPointAnnotation *droppedPinAnnotation;
+@property (nonatomic, copy) void (^pinAddressLoadHandler)(NSString *address);
 
 @end

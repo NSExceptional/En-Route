@@ -8,6 +8,7 @@
 
 #import "ERMapViewController.h"
 #import "TBAlertController.h"
+#import "ERCalloutView.h"
 
 @interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate>
 
@@ -16,9 +17,6 @@
 @property (nonatomic, readonly) UIVisualEffectView *controlsBackgroundView;
 @property (nonatomic, readonly) UITextField *startTextField;
 @property (nonatomic, readonly) UITextField *endTextField;
-
-@property (nonatomic) MKPlacemark *startLocation;
-@property (nonatomic) MKPlacemark *endLocation;
 
 @property (nonatomic) NSMutableArray *POIs; //points of interest
 @end
@@ -35,7 +33,7 @@
     
 }
 
-- (MKMapView *)mapView {
+- (ERMapView *)mapView {
     return (id)self.view;
 }
 
@@ -56,7 +54,9 @@
     UIBarButtonItem *spacer = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     self.toolbarItems = @[userTrackingButton, spacer, list];
     
-    [self setupTextFields];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Go" style:UIBarButtonItemStyleDone target:self action:@selector(beginRouting)];
+    
+    //    [self setupTextFields];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -81,6 +81,34 @@
 - (void)clearButtonPressed {
 }
 - (void)showList {
+}
+
+- (void)beginRouting {
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+    
+    __block MKPlacemark *start = nil, *end = nil;
+    
+    CLGeocoder *geocoder = [CLGeocoder new];
+    // Get starting address
+    [geocoder geocodeAddressString:self.startTextField.text completionHandler:^(NSArray *placemarks, NSError *error) {
+        if (placemarks && placemarks.count) {
+            start = [[MKPlacemark alloc] initWithPlacemark:placemarks[0]];
+            // Get destination address
+            [geocoder geocodeAddressString:self.endTextField.text completionHandler:^(NSArray *placemarks, NSError *error) {
+                if (placemarks && placemarks.count) {
+                    end = [[MKPlacemark alloc] initWithPlacemark:placemarks[0]];
+                    // Show routes
+                    [self showRoutesForStart:start end:end];
+                } else {
+                    [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not locate destination address"] showFromViewController:self];
+                    [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+                }
+            }];
+        } else {
+            [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not locate starting address"] showFromViewController:self];
+            [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+        }
+    }];
 }
 
 #pragma mark - POI processing
@@ -119,6 +147,8 @@
     
     MKDirections *directions     = [[MKDirections alloc] initWithRequest:request];
     [directions calculateDirectionsWithCompletionHandler:^(MKDirectionsResponse *response, NSError *error) {
+        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+        
         if (!error && response.routes.count) {
             [self.mapView addOverlay:response.routes[0].polyline];
         } else {
@@ -150,23 +180,12 @@
         pin.canShowCallout       = YES;
         pin.calloutOffset        = CGPointMake(-8, 0);
         
-        pin.leftCalloutAccessoryView = ({
-            UIView *view    = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 104, CGRectGetHeight(pin.frame)+10)];
-            view.tintColor  = [UIColor whiteColor];
-            UIButton *start = [UIButton buttonWithType:UIButtonTypeSystem];
-            UIButton *end   = [UIButton buttonWithType:UIButtonTypeSystem];
-            start.frame     = CGRectMake(0, 0, 52, CGRectGetHeight(view.frame));
-            end.frame       = CGRectMake(52, 0, 52, CGRectGetHeight(view.frame));
-            start.backgroundColor = [UIColor colorWithRed:0.200 green:0.400 blue:1.000 alpha:1.000];
-            end.backgroundColor   = [UIColor colorWithRed:0.600 green:0.000 blue:1.000 alpha:1.000];
-            [start setTitle:@"Start" forState:UIControlStateNormal];
-            [end setTitle:@"End" forState:UIControlStateNormal];
-            start.titleEdgeInsets = end.titleEdgeInsets = UIEdgeInsetsMake(0, 0, 5, 0);
-            
-            [view addSubview:start];
-            [view addSubview:end];
-            view;
-        });
+        self.mapView.pinAddressLoadHandler = ^(NSString *address) {
+            ERCalloutView *calloutView = [ERCalloutView viewForAnnotation:pin];
+            calloutView.tapLeftHandler = ^{ self.startTextField.text = address; };
+            calloutView.tapRightHandler = ^{ self.endTextField.text = address; };
+            pin.leftCalloutAccessoryView = [ERCalloutView viewForAnnotation:pin];
+        };
         
         return pin;
     }

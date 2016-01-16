@@ -11,7 +11,7 @@
 
 @interface ERMapViewController : UIViewController
 
-@property (nonatomic, readonly) MKMapView *mapView;
+@property (nonatomic, readonly) ERMapView *mapView;
 
 @end
 

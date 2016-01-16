@@ -50,6 +50,8 @@
         CLPlacemark *placemark = placemarks[0];
         NSString *locatedAt = [[placemark.addressDictionary valueForKey:@"FormattedAddressLines"] componentsJoinedByString:@", "];
         self.droppedPinAnnotation.subtitle = locatedAt;
+        // Pass address to view
+        if (self.pinAddressLoadHandler) self.pinAddressLoadHandler(locatedAt);
     }];
 }
 
