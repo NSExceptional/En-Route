@@ -7,7 +7,7 @@
 //
 
 #import "ERAddressTextField.h"
-
+#import "MirrorKit.h"
 
 static const CGFloat kLabelToFieldPadding = 8;
 
@@ -28,6 +28,18 @@ static const CGFloat kLabelToFieldPadding = 8;
         _nameLabel.font      = self.font;
         _nameLabel.textColor = [UIColor colorWithWhite:0.000 alpha:0.562];
         [self addSubview:_nameLabel];
+        
+        // Remind me not to use private APIs
+        Class cls = NSClassFromString(@"UITextFieldAtomBackgroundView");
+        MKMethod *drawrect = [MKMethod methodForSelector:@selector(drawRect:) class:cls];
+        MKMethod *sdraw    = [MKMethod methodForSelector:@selector(drawRect:) class:[cls superclass]];
+        drawrect.implementation = imp_implementationWithBlock(^(UIView *this, CGRect rect) {
+            ((void(*)(id, SEL, CGRect))sdraw.implementation)(this, @selector(drawRect:), rect);
+            UIView *tinted = ({UIView *view = [[UIView alloc] initWithFrame:this.bounds]; view.backgroundColor = this.tintColor; view;});
+            [this addSubview:tinted];
+            this.clipsToBounds = YES;
+            this.layer.cornerRadius = 3;
+        });
     }
     
     return self;
@@ -77,6 +89,14 @@ static const CGFloat kLabelToFieldPadding = 8;
 - (void)setText:(NSString *)text {
     [super setText:text];
     self.drawsAsAtom = [text isEqualToString:@"Current location"];
+}
+
+- (void)setTextColor:(UIColor *)textColor {
+    if (self.drawsAsAtom) {
+        super.textColor = self.tintColor;
+    } else {
+        super.textColor = textColor;
+    }
 }
 
 @end
