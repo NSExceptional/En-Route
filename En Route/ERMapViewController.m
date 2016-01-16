@@ -17,6 +17,9 @@
 @property (nonatomic, readonly) UITextField *startTextField;
 @property (nonatomic, readonly) UITextField *endTextField;
 
+@property (nonatomic) MKPlacemark *startLocation;
+@property (nonatomic) MKPlacemark *endLocation;
+
 @property (nonatomic) NSMutableArray *POIs; //points of interest
 @end
 
@@ -142,14 +145,26 @@
     } else {
         // TODO: reuse annotation views. see -[MKMapView dequeueReusableAnnotationViewWithIdentifier:
         MKPinAnnotationView *pin = [MKPinAnnotationView new];
-        pin.animatesDrop = YES;
-        pin.pinColor = MKPinAnnotationColorPurple;
-        pin.canShowCallout = YES;
-        pin.calloutOffset = CGPointMake(-8, 0);
+        pin.animatesDrop         = YES;
+        pin.pinColor             = MKPinAnnotationColorPurple;
+        pin.canShowCallout       = YES;
+        pin.calloutOffset        = CGPointMake(-8, 0);
         
         pin.leftCalloutAccessoryView = ({
-            UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 1, 1)];
-            view.backgroundColor = [UIColor blueColor];
+            UIView *view    = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 104, CGRectGetHeight(pin.frame)+10)];
+            view.tintColor  = [UIColor whiteColor];
+            UIButton *start = [UIButton buttonWithType:UIButtonTypeSystem];
+            UIButton *end   = [UIButton buttonWithType:UIButtonTypeSystem];
+            start.frame     = CGRectMake(0, 0, 52, CGRectGetHeight(view.frame));
+            end.frame       = CGRectMake(52, 0, 52, CGRectGetHeight(view.frame));
+            start.backgroundColor = [UIColor colorWithRed:0.200 green:0.400 blue:1.000 alpha:1.000];
+            end.backgroundColor   = [UIColor colorWithRed:0.600 green:0.000 blue:1.000 alpha:1.000];
+            [start setTitle:@"Start" forState:UIControlStateNormal];
+            [end setTitle:@"End" forState:UIControlStateNormal];
+            start.titleEdgeInsets = end.titleEdgeInsets = UIEdgeInsetsMake(0, 0, 5, 0);
+            
+            [view addSubview:start];
+            [view addSubview:end];
             view;
         });
         
