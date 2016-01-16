@@ -41,6 +41,8 @@
     
     MKUserTrackingBarButtonItem *userTrackingButton = [[MKUserTrackingBarButtonItem alloc] initWithMapView:self.mapView];
     self.toolbarItems = @[userTrackingButton];
+    
+    self.navigationController.hidesBarsOnTap = YES;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
