@@ -14,4 +14,6 @@
 @property (nonatomic, weak) IBOutlet UILabel *distanceLabel;
 @property (nonatomic, weak) IBOutlet UIImageView *chevron;
 
+- (void)flipChevron;
+
 @end

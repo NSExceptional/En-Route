@@ -49,6 +49,11 @@ static BOOL trackUserInitially = YES;
 @property (nonatomic) BOOL loadingResults;
 @property (nonatomic) ERLocalSearchQueue *searchQueue;
 
+@property (nonatomic, readonly) BOOL boolProperty;
+@property (nonatomic, readonly) NSInteger intProperty;
+@property (nonatomic, readonly) NSArray *arrayProperty;
+@property (nonatomic, readonly) NSString *dictionaryProperty;
+
 @end
 
 
@@ -56,21 +61,24 @@ static BOOL trackUserInitially = YES;
 
 
 - (void)loadView {
+    // Create MapView
     self.view = [[ERMapView alloc] initWithFrame:[UIScreen mainScreen].bounds];
     self.mapView.delegate = self;
     
-    CGFloat screenWidth = CGRectGetWidth([UIScreen mainScreen].bounds);
-    CGFloat tfWidth = CGRectGetWidth([UIScreen mainScreen].bounds) - kTFSidePadding*2;
+    CGFloat screenWidth    = CGRectGetWidth([UIScreen mainScreen].bounds);
+    CGFloat textFieldWidth = CGRectGetWidth([UIScreen mainScreen].bounds) - kTFSidePadding*2;
     CGFloat hairlineHeight = 1.f/[UIScreen mainScreen].scale;
     
+    // Setup nav bar thingy
     _controlsBackgroundView       = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight]];
     CGRect controlFrame           = CGRectMake(0, 0, screenWidth, kControlViewHeight);
     CGFloat viewHeight            = CGRectGetHeight(controlFrame);
     _controlsBackgroundView.frame = controlFrame;
     
-    CGRect startFrame = CGRectMake(kTFSidePadding, (viewHeight-kTFBottomPadding) - kTFHeight*2 - kTFSpacing, tfWidth, kTFHeight);
-    CGRect endFrame   = CGRectMake(kTFSidePadding, (viewHeight-kTFBottomPadding) - kTFHeight, tfWidth, kTFHeight);
+    CGRect startFrame = CGRectMake(kTFSidePadding, (viewHeight-kTFBottomPadding) - kTFHeight*2 - kTFSpacing, textFieldWidth, kTFHeight);
+    CGRect endFrame   = CGRectMake(kTFSidePadding, (viewHeight-kTFBottomPadding) - kTFHeight, textFieldWidth, kTFHeight);
     
+    // Place text fields
     _startTextField = [[ERAddressTextField alloc] initWithFrame:startFrame];
     _endTextField   = [[ERAddressTextField alloc] initWithFrame:endFrame];
     _startTextField.nameLabel.text = @"Start:";
@@ -79,20 +87,24 @@ static BOOL trackUserInitially = YES;
     _startTextField.delegate = self;
     _endTextField.delegate   = self;
     
+    // Toolbar label
     _toolbarLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 1, 1)];
     _toolbarLabel.font = [UIFont systemFontOfSize:12];
     
+    // Nav bar hairline
     UIView *hairline = ({
         UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, viewHeight - hairlineHeight, screenWidth, hairlineHeight)];
         view.backgroundColor = [UIColor colorWithWhite:0.000 alpha:0.301];
         view;
     });
     
+    // Add subviews
     [_controlsBackgroundView addSubview:_startTextField];
     [_controlsBackgroundView addSubview:_endTextField];
     [_controlsBackgroundView addSubview:hairline];
     [self.mapView addSubview:_controlsBackgroundView];
     
+    // Map rectangle
     NSString *rekt = [[NSUserDefaults standardUserDefaults] valueForKey:@"MapRekt"];
     if (rekt) {
         CGRect r = CGRectFromString(rekt);
@@ -143,7 +155,35 @@ static BOOL trackUserInitially = YES;
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     
-    [self.locationManager requestWhenInUseAuthorization];
+    // Request location access or let the user know we need location access.
+    CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
+    switch (status) {
+        case kCLAuthorizationStatusNotDetermined: {
+            NSString *message = @"Do you want to allow En Route to use your location while using the app to provide you with a better experience? You can always disable this feature in Settings.";
+            TBAlertController *locationRequest = [TBAlertController alertViewWithTitle:@"Location services" message:message];
+            [locationRequest addOtherButtonWithTitle:@"Yes" buttonAction:^(NSArray * _Nonnull textFieldStrings) {
+                [self.locationManager requestWhenInUseAuthorization];
+            }];
+            [locationRequest addOtherButtonWithTitle:@"Not right now" buttonAction:^(NSArray *textFieldStrings) {
+                [[NSUserDefaults standardUserDefaults] setObject:@1 forKey:@"location_days_since_last_request"];
+            }];
+            [locationRequest setCancelButtonWithTitle:@"No, don't ask me again" buttonAction:^(NSArray * _Nonnull textFieldStrings) {
+                [[NSUserDefaults standardUserDefaults] setObject:@YES forKey:@"location_dont_ask_again"];
+            }];
+            
+            [locationRequest showFromViewController:self];
+            
+            
+            break;
+        }
+        case kCLAuthorizationStatusRestricted:
+        case kCLAuthorizationStatusDenied:
+        case kCLAuthorizationStatusAuthorizedAlways:
+        case kCLAuthorizationStatusAuthorizedWhenInUse: {
+            break;
+        }
+    }
+    
 }
 
 #pragma mark - View customization
@@ -160,20 +200,17 @@ static BOOL trackUserInitially = YES;
 #pragma mark - Actions
 
 - (void)clearButtonPressed {
+    // Remove overlays, clear fields
     [self.mapView removeOverlays:self.mapView.overlays];
     self.startTextField.text = nil;
     self.endTextField.text = nil;
     
+    // Remove annotations and POIs
     [self.mapView removeAnnotations:self.mapView.annotations];
     [self.POIs removeAllObjects];
     self.toolbarLabel.text = nil;
     
     [self updateButtons];
-}
-
-- (void)resetMapData {
-    [self.mapView removeAnnotations:self.mapView.annotations];
-    [self.POIs removeAllObjects];
 }
 
 - (void)showList {
@@ -185,7 +222,7 @@ static BOOL trackUserInitially = YES;
 
 - (void)beginRouting {
     [self.mapView removeOverlays:self.mapView.overlays];
-    [self.mapView removeAnnotations:self.mapView.annotations];
+    [self.mapView removeAnnotations:self.mapView.resultAnnotations];
     [self.POIs removeAllObjects];
     self.toolbarLabel.text = nil;
     
@@ -197,6 +234,8 @@ static BOOL trackUserInitially = YES;
     
     [self getStartPlacemark:^(MKPlacemark *start) {
         [self getEndPlacemark:^(MKPlacemark *end) {
+            self.toolbarLabel.text = @"Calculating routes…";
+            [self.toolbarLabel sizeToFit];
             [self showRoutesForStart:start end:end];
         }];
     }];
@@ -305,6 +344,11 @@ static BOOL trackUserInitially = YES;
         [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
         self.loadingResults = NO;
         [self updateNavigationItems];
+        
+        // Loading message
+        self.toolbarLabel.text = [NSString stringWithFormat:@"%@ restaurants along your route", @(self.POIs.count)];
+        [self.toolbarLabel sizeToFit];
+        
         return;
     }
     
@@ -325,10 +369,12 @@ static BOOL trackUserInitially = YES;
         [self.mapView addAnnotations:self.latestAnnotations];
         [self.latestPOIs removeAllObjects];
         
-        self.toolbarLabel.text = [NSString stringWithFormat:@"%@ restaurants along your route", @(self.POIs.count)];
+        // Update message and list button state
+        self.toolbarLabel.text = [NSString stringWithFormat:@"Fetching results… %@ so far…", @(self.POIs.count)];
         [self.toolbarLabel sizeToFit];
         self.listButton.enabled = self.POIs.count > 0;
         
+        // Dequeue route
         [alternates removeObject:route];
         [usedRoutes addObject:route];
         
@@ -394,12 +440,24 @@ static BOOL trackUserInitially = YES;
 #pragma mark - CLLocationManagerDelegate, MKMapViewDelegate
 
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
-    // User granted location access
-    if (status == kCLAuthorizationStatusAuthorizedWhenInUse) {
-        if (trackUserInitially)
-            [self.mapView setUserTrackingMode:MKUserTrackingModeFollow animated:YES];
-    } else {
-        [[TBAlertController simpleOKAlertWithTitle:@"Enable location services" message:@"Allowing this app to use your location may improve your experience."] showFromViewController:self];
+    switch (status) {
+        case kCLAuthorizationStatusRestricted: {
+            NSString *message = @"It appears location services have been restricted. En Route won't be able to show you where you are.";
+            [[TBAlertController simpleOKAlertWithTitle:@"Location services restructed" message:message] showFromViewController:self];
+            break;
+        }
+        case kCLAuthorizationStatusDenied: {
+            NSString *message = @"En Route needs access to your location to tell you where you are, and to show you how far you are from a given location.";
+            [[TBAlertController simpleOKAlertWithTitle:@"En Route needs location access" message:message] showFromViewController:self];
+            break;
+        }
+        case kCLAuthorizationStatusNotDetermined:
+        case kCLAuthorizationStatusAuthorizedAlways:
+        case kCLAuthorizationStatusAuthorizedWhenInUse: {
+            if (trackUserInitially)
+                [self.mapView setUserTrackingMode:MKUserTrackingModeFollow animated:YES];
+            break;
+        }
     }
 }
 

@@ -17,6 +17,7 @@
 		B468D8C91C49C33400AFC6A7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B468D8C71C49C33400AFC6A7 /* LaunchScreen.storyboard */; };
 		B468D8D21C49C42800AFC6A7 /* ERMapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8D11C49C42800AFC6A7 /* ERMapViewController.m */; };
 		B471FAD91C49E70D005AAD9F /* ERMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = B471FAD81C49E70D005AAD9F /* ERMapView.m */; };
+		B48023191C4C72F3002B941E /* UIImage+Util.m in Sources */ = {isa = PBXBuildFile; fileRef = B48023181C4C72F3002B941E /* UIImage+Util.m */; };
 		B490FBE11C4A2B2400717275 /* ERAddressTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = B490FBE01C4A2B2400717275 /* ERAddressTextField.m */; };
 		B490FBE71C4A7ACC00717275 /* ERLocalSearchQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = B490FBE61C4A7ACC00717275 /* ERLocalSearchQueue.m */; };
 		B4BE533D1C4AD0CE005F8216 /* ERListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BE533C1C4AD0CE005F8216 /* ERListViewController.m */; };
@@ -46,6 +47,8 @@
 		B468D8D11C49C42800AFC6A7 /* ERMapViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERMapViewController.m; sourceTree = "<group>"; };
 		B471FAD71C49E70D005AAD9F /* ERMapView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERMapView.h; sourceTree = "<group>"; };
 		B471FAD81C49E70D005AAD9F /* ERMapView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERMapView.m; sourceTree = "<group>"; };
+		B48023171C4C72F3002B941E /* UIImage+Util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+Util.h"; sourceTree = "<group>"; };
+		B48023181C4C72F3002B941E /* UIImage+Util.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+Util.m"; sourceTree = "<group>"; };
 		B490FBDF1C4A2B2400717275 /* ERAddressTextField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERAddressTextField.h; sourceTree = "<group>"; };
 		B490FBE01C4A2B2400717275 /* ERAddressTextField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERAddressTextField.m; sourceTree = "<group>"; };
 		B490FBE51C4A7ACC00717275 /* ERLocalSearchQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERLocalSearchQueue.h; sourceTree = "<group>"; };
@@ -144,6 +147,8 @@
 				B468D8C71C49C33400AFC6A7 /* LaunchScreen.storyboard */,
 				B468D8CA1C49C33400AFC6A7 /* Info.plist */,
 				B468D8B91C49C33400AFC6A7 /* Supporting Files */,
+				B48023171C4C72F3002B941E /* UIImage+Util.h */,
+				B48023181C4C72F3002B941E /* UIImage+Util.m */,
 			);
 			path = "En Route";
 			sourceTree = "<group>";
@@ -268,6 +273,7 @@
 				B420DD781C4A9BDD00AD56A6 /* MKPlacemark+MKPointAnnotation.m in Sources */,
 				B468D8D21C49C42800AFC6A7 /* ERMapViewController.m in Sources */,
 				B471FAD91C49E70D005AAD9F /* ERMapView.m in Sources */,
+				B48023191C4C72F3002B941E /* UIImage+Util.m in Sources */,
 				B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */,
 				B4BE534A1C4AD6C6005F8216 /* NSIndexPath+Util.m in Sources */,
 				B4BE53401C4AD0E7005F8216 /* ERListItemCell.m in Sources */,

@@ -7,17 +7,24 @@
 //
 
 @import MapKit;
+typedef void (^VoidBlock)();
+typedef void (^ArrayBlock)(NSArray *mapItems);
+typedef void (^IntBlock)(NSInteger timeLeft);
 
 
 @interface ERLocalSearchQueue : NSObject
 
 + (instancetype)queueWithQuery:(NSString *)query radius:(CLLocationDistance)radius;
 
-- (void)searchWithCoords:(NSArray *)locations loopCallback:(void(^)(NSArray *mapItems))callback completionCallback:(void(^)())completion;
+- (void)searchRoutes:(NSArray<MKRoute*> *)routes repeatedCallback:(ArrayBlock)callback completion:(VoidBlock)completion;
+- (void)cancelRequests;
 
 @property (nonatomic) CLLocationDistance searchRadius;
 @property (nonatomic) NSString *query;
+/// Whether or not we can make more requests immediately
+@property (nonatomic, readonly) BOOL ready;
 
-- (void)cancelRequests;
+@property (nonatomic, copy) IntBlock pauseCallback;
+@property (nonatomic, copy) VoidBlock resumeCallback;
 
 @end

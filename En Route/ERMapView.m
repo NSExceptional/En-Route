@@ -72,4 +72,12 @@
     return [self valueForKey:@"_compassView"];
 }
 
+- (NSArray *)resultAnnotations {
+    if (!self.droppedPinAnnotation) return self.annotations;
+    
+    NSMutableArray *results = self.annotations.mutableCopy;
+    [results removeObject:self.droppedPinAnnotation];
+    return results;
+}
+
 @end
