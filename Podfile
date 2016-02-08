@@ -1,3 +1,4 @@
 pod 'TBAlertController', :inhibit_warnings => true
 pod 'FLEX', :inhibit_warnings => true
-pod 'MirrorKit'
+pod 'MirrorKit', :inhibit_warnings => true
+pod 'libextobjc', :inhibit_warnings => true

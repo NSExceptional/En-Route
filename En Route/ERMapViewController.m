@@ -15,6 +15,8 @@
 #import "TBTimer.h"
 #import "ERListViewController.h"
 
+#import <EXTScope.h>
+
 
 static const CGFloat kTFHeight          = 28;
 static const CGFloat kTFSidePadding     = 6;
@@ -43,7 +45,7 @@ static BOOL trackUserInitially = YES;
 
 @property (nonatomic, readonly) BOOL hideButtons;
 @property (nonatomic) MKAnnotationView *userLocationView;
-@property (nonatomic) MKUserLocation *userLocation;
+@property (nonatomic, readonly) MKUserLocation *userLocation;
 @property (nonatomic) MKAnnotationView *droppedPin;
 
 @property (nonatomic) BOOL loadingResults;
@@ -234,8 +236,6 @@ static BOOL trackUserInitially = YES;
     
     [self getStartPlacemark:^(MKPlacemark *start) {
         [self getEndPlacemark:^(MKPlacemark *end) {
-            self.toolbarLabel.text = @"Calculating routes…";
-            [self.toolbarLabel sizeToFit];
             [self showRoutesForStart:start end:end];
         }];
     }];
@@ -243,7 +243,9 @@ static BOOL trackUserInitially = YES;
 
 - (void)getStartPlacemark:(void(^)(MKPlacemark *start))callback {
     if ([self.startTextField.text isEqualToString:@"Current location"]) {
-        callback([[MKPlacemark alloc] initWithCoordinate:[[self.userLocation valueForKey:@"location"] coordinate] addressDictionary:nil]);
+        NSParameterAssert(self.userLocation);
+        CLLocation *location = [self.userLocation valueForKey:@"location"];
+        callback([[MKPlacemark alloc] initWithCoordinate:location.coordinate addressDictionary:nil]);
     } else {
         [[CLGeocoder new] geocodeAddressString:self.startTextField.text completionHandler:^(NSArray *placemark, NSError *error) {
             if (placemark && placemark.count) {
@@ -319,68 +321,77 @@ static BOOL trackUserInitially = YES;
     request.destination          = endLocation;
     request.requestsAlternateRoutes = YES;
     
+    self.toolbarLabel.text = @"Calculating routes…";
+    [self.toolbarLabel sizeToFit];
+    
     MKDirections *directions     = [[MKDirections alloc] initWithRequest:request];
     [directions calculateDirectionsWithCompletionHandler:^(MKDirectionsResponse *response, NSError *error) {
         
         if (!error && response.routes.count) {
+            // Add overlays, zoom
             [self.mapView addOverlays:[response.routes valueForKeyPath:@"@unionOfObjects.polyline"]];
+            MKPolyline *line = (id)self.mapView.overlays.firstObject;
+            [self.mapView setVisibleMapRect:line.boundingMapRect edgePadding:UIEdgeInsetsMake(30, 10, 10, 10) animated:YES];
             
             // Add annotations
             [TBTimer startTimer];
-            [self searchRoute:response.routes.firstObject then:response.routes.mutableCopy completed:[NSMutableArray array]];
+            [self searchRoutes:response.routes];
             
         } else {
             [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not get directions"] showFromViewController:self];
             [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
             self.loadingResults = NO;
             [self updateNavigationItems];
+            self.toolbarLabel.text = nil;
         }
     }];
 }
 
-- (void)searchRoute:(MKRoute *)route then:(NSMutableArray *)alternates completed:(NSMutableArray *)usedRoutes {
-    if (!route) {
-        self.searchQueue = nil;
-        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-        self.loadingResults = NO;
-        [self updateNavigationItems];
-        
-        // Loading message
-        self.toolbarLabel.text = [NSString stringWithFormat:@"%@ restaurants along your route", @(self.POIs.count)];
-        [self.toolbarLabel sizeToFit];
-        
-        return;
-    }
+- (void)searchRoutes:(NSArray<MKRoute*> *)routes {
     
-    // Get coords, filter out already searched coords
-    NSArray *coords = [self coordinatesAlongRoute:route];
-    NSMutableSet *filteredCoords = [NSMutableSet setWithArray:coords];
-    for (MKRoute *route in usedRoutes)
-        [filteredCoords minusSet:[NSSet setWithArray:[self coordinatesAlongRoute:route]]];
-    coords = filteredCoords.allObjects;
-    
-    // Perform search
+    // Init queue
+    @weakify(self);
     self.searchQueue = self.searchQueue ?: [ERLocalSearchQueue queueWithQuery:@"food" radius:1000];
-    [self.searchQueue searchWithCoords:coords loopCallback:^(NSArray *mapItems) {
-        [self.latestPOIs addObjectsFromArray:mapItems];
-    } completionCallback:^{
+    // Pause callback
+    self.searchQueue.pauseCallback = ^(NSInteger secondsLeft) { @strongify(self)
+        //NSString *message = [NSString stringWithFormat:@"En Route is limited in the number of requests it can make in a minute. Please wait for %@ seconds.", @(secondsLeft)];
+        //[[TBAlertController simpleOKAlertWithTitle:@"Rate limiting" message:message] showFromViewController:self];
+        self.toolbarLabel.text = [NSString stringWithFormat:@"Waiting for %@ seconds…", @(secondsLeft)];
+        [self.toolbarLabel sizeToFit];
+    };
+    // Resume callback
+    self.searchQueue.resumeCallback = ^{ @strongify(self)
+        self.toolbarLabel.text = [NSString stringWithFormat:@"Fetching results… %@ so far…", @(self.POIs.count)];
+        [self.toolbarLabel sizeToFit];
+    };
+    // Debug callback
+    self.searchQueue.debugCallback = ^(NSInteger count) { @strongify(self)
+        self.toolbarLabel.text = [NSString stringWithFormat:@"Fetching %@ results… ", @(count)];
+        [self.toolbarLabel sizeToFit];
+    };
+    
+    [self.searchQueue searchRoutes:routes repeatedCallback:^(NSArray *mapItems) {
+        // Update map, order is important
+        [self.latestPOIs setSet:[NSSet setWithArray:mapItems]];
         [self.latestPOIs minusSet:self.POIs];
-        [self.POIs addObjectsFromArray:self.latestPOIs.allObjects];
+        [self.POIs addObjectsFromArray:mapItems];
         [self.mapView addAnnotations:self.latestAnnotations];
-        [self.latestPOIs removeAllObjects];
         
         // Update message and list button state
         self.toolbarLabel.text = [NSString stringWithFormat:@"Fetching results… %@ so far…", @(self.POIs.count)];
         [self.toolbarLabel sizeToFit];
         self.listButton.enabled = self.POIs.count > 0;
+    } completion:^{
+        // Remove queue, cleanup
+        self.searchQueue = nil;
+        [self.latestPOIs setSet:[NSSet set]];
+        self.loadingResults = NO;
+        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+        [self updateNavigationItems];
         
-        // Dequeue route
-        [alternates removeObject:route];
-        [usedRoutes addObject:route];
-        
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(6 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [self searchRoute:alternates.firstObject then:alternates completed:usedRoutes];
-        });
+        // Final message
+        self.toolbarLabel.text = [NSString stringWithFormat:@"%@ restaurants along your route", @(self.POIs.count)];
+        [self.toolbarLabel sizeToFit];
     }];
 }
 
@@ -461,16 +472,17 @@ static BOOL trackUserInitially = YES;
     }
 }
 
-//- (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
-//    static dispatch_once_t onceToken;
-//    dispatch_once(&onceToken, ^{
-//        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-//            self.startTextField.text = @"Current location";
-//            self.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
-//            [self beginRouting];
-//        });
-//    });
-//}
+// Demo code
+- (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            self.startTextField.text = @"Current location";
+            self.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
+            [self beginRouting];
+        });
+    });
+}
 
 // Left this in this class because putting it in ERMapView caused the drop animation to disappear
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(nonnull id<MKAnnotation>)annotation {

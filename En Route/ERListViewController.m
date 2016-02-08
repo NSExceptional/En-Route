@@ -193,8 +193,7 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
 #pragma mark - Actions
 
 - (void)showShareSheetForMapItem:(MKMapItem *)item {
-    NSArray *items = @[item.name, item.url];
-    UIActivityViewController *share = [[UIActivityViewController alloc] initWithActivityItems:items applicationActivities:nil];
+    UIActivityViewController *share = [[UIActivityViewController alloc] initWithActivityItems:@[item.name, item.url] applicationActivities:nil];
     [self presentViewController:share animated:YES completion:nil];
 }
 

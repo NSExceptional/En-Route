@@ -24,6 +24,7 @@ typedef void (^IntBlock)(NSInteger timeLeft);
 /// Whether or not we can make more requests immediately
 @property (nonatomic, readonly) BOOL ready;
 
+@property (nonatomic, copy) IntBlock debugCallback;
 @property (nonatomic, copy) IntBlock pauseCallback;
 @property (nonatomic, copy) VoidBlock resumeCallback;
 

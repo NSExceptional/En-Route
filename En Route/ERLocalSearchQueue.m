@@ -89,15 +89,17 @@ static dispatch_queue_t _backgroundQueue;
     // Get all coords in an array
     NSMutableOrderedSet *filteredCoords = [NSMutableOrderedSet orderedSet];
     for (MKRoute *route in routes)
-        [filteredCoords minusSet:[NSSet setWithArray:[self coordinatesAlongRoute:route]]];
+        [filteredCoords addObjectsFromArray:[self coordinatesAlongRoute:route]];
     _locations = filteredCoords.array;
     
     [self filterLocations];
     
+    RunBlockP(_debugCallback, _locations.count);
+    
     // Calculate delay
     _delay = _locations.count <= 50 ? 0 : 1.2001;
     // Puts a hold on the next set of requests
-    if (_locations.count <= 50) {
+    if (_locations.count > 50) {
         _secondsLeft += 60;
     }
     
@@ -169,11 +171,24 @@ static dispatch_queue_t _backgroundQueue;
                 if (loca != locb)
                     [newLocs addObject:loca];
     
-    newLocs = (id)[newLocs filteredSetUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-        return [newLocs countForObject:evaluatedObject] < 3;
-    }]];
+    self.locations = [self optimize:newLocs];
+}
+
+- (NSArray *)optimize:(NSCountedSet *)set {
+    NSArray *a = [self filteredSetObjectsWithMaxCount:3 set:set];
+    NSArray *b = [self filteredSetObjectsWithMaxCount:4 set:set];
+    NSArray *c = [self filteredSetObjectsWithMaxCount:5 set:set];
     
-    self.locations = newLocs.allObjects;
+    if (a.count > 50) return a;
+    if (c.count < 50) return c;
+    if (b.count < 50) return b;
+    return a;
+}
+
+- (NSArray *)filteredSetObjectsWithMaxCount:(NSInteger)count set:(NSCountedSet *)set {
+    return [set filteredSetUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
+        return [set countForObject:evaluatedObject] < count;
+    }]].allObjects;
 }
 
 @end
