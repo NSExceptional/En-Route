@@ -96,7 +96,6 @@ static dispatch_queue_t _backgroundQueue;
     _locations = filteredCoords.array;
     
     [self filterLocations];
-    _lastRequestCount = _locations.count;
     
     RunBlockP(_debugCallback, _locations.count);
     if (!_locations.count) {
@@ -139,6 +138,9 @@ static dispatch_queue_t _backgroundQueue;
             [NSThread sleepForTimeInterval:self.secondsLeft+.01];
             RunBlock(_resumeCallback);
         }
+        
+        _lastRequestActivity = [NSDate date];
+        _lastRequestCount = _locations.count;
         _timer = [NSTimer timerWithTimeInterval:1 target:self selector:@selector(decTimer) userInfo:nil repeats:YES];
         [_timer fire];
         
