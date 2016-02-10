@@ -22,6 +22,9 @@
 @property (nonatomic) CGFloat delay;
 @property (nonatomic) NSInteger total;
 
+@property (nonatomic) NSDate *lastRequestActivity;
+@property (nonatomic) NSInteger lastRequestCount;
+
 @property (nonatomic, copy) VoidBlock loopCallback;
 @property (nonatomic, copy) VoidBlock completion;;
 
@@ -93,14 +96,38 @@ static dispatch_queue_t _backgroundQueue;
     _locations = filteredCoords.array;
     
     [self filterLocations];
+    _lastRequestCount = _locations.count;
     
     RunBlockP(_debugCallback, _locations.count);
+    if (!_locations.count) {
+        // Return if we have no requests to make.
+        RunBlock(_completion);
+        return;
+    }
     
     // Calculate delay
     _delay = _locations.count <= 50 ? 0 : 1.2001;
-    // Puts a hold on the next set of requests
-    if (_locations.count > 50) {
-        _secondsLeft += 60;
+    
+    // Puts a hold on the next set of requests if necessary.
+    // If we made the last request over a minute ago, we have nothing
+    // to do here. Otherwise, if the number of requests made previously plus
+    // the number of requests we're about to make is <= 50 change the request
+    // count but do not update the request date, since we're gonna count it
+    // as one big request. Else, if the last request count is < 50,
+    // delay the next set of requests by 60 - {t since last req} seconds.
+    // This will ensure we never make more than 50 req / min.
+    NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:_lastRequestActivity];
+    if (interval < 60) {
+        if ((_lastRequestCount % 51) + _locations.count <= 50) {
+            _lastRequestCount += _locations.count;
+        } else if ((_lastRequestCount % 51) <= 50) {
+            _secondsLeft += 60 - interval;
+            // If neither of the above are true, then this will be true implicitly.
+            // We only need to reset the delay in the event where we're making <= 50
+            // requests after making n * 50 + y requests, where y < 50.
+        } else {//if (_locations.count <= 50) {
+            _delay = 1.2001;
+        }
     }
     
     // Dispatch so we can safely sleep the thread
@@ -141,7 +168,10 @@ static dispatch_queue_t _backgroundQueue;
                 }
                 
                 // Last one
-                if (--i == 0) { RunBlock(_completion); }
+                if (--i == 0) {
+                    RunBlock(_completion);
+                    _lastRequestActivity = [NSDate date];
+                }
             }];
             
             [NSThread sleepForTimeInterval:_delay];
