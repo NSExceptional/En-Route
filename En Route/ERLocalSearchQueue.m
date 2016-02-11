@@ -116,7 +116,7 @@ static dispatch_queue_t _backgroundQueue;
     // delay the next set of requests by 60 - {t since last req} seconds.
     // This will ensure we never make more than 50 req / min.
     NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:_lastRequestActivity];
-    if (interval < 60) {
+    if (_lastRequestActivity && interval < 60) {
         if ((_lastRequestCount % 51) + _locations.count <= 50) {
             _lastRequestCount += _locations.count;
         } else if ((_lastRequestCount % 51) <= 50) {
@@ -146,7 +146,8 @@ static dispatch_queue_t _backgroundQueue;
         
         // Make requests in a loop
         __block NSInteger i = _locations.count;
-        for (CLLocation *loc in _locations) {
+        __block BOOL stop = NO;
+        for (CLLocation *loc in _locations) { if (stop) break;
             self.request.region = MKCoordinateRegionMakeWithDistance(loc.coordinate, _searchRadius, _searchRadius);
             
             // Wait if necessary and call back to notify about the wait
@@ -167,6 +168,9 @@ static dispatch_queue_t _backgroundQueue;
                 if (error) {
                     NSLog(@"-------FAIL------- %@", @(_total));
                     [TBTimer lap];
+                    RunBlock(_errorCallback);
+                    i = 1; // Execute completion
+                    stop = YES; // Terminate loop
                 }
                 
                 // Last one

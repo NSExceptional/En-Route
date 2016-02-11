@@ -364,6 +364,11 @@ static BOOL trackUserInitially = YES;
         self.toolbarLabel.text = [NSString stringWithFormat:@"Fetching results… %@ so far…", @(self.POIs.count)];
         [self.toolbarLabel sizeToFit];
     };
+    // Error callback
+    self.searchQueue.errorCallback = ^{ @strongify(self)
+        self.toolbarLabel.text = [NSString stringWithFormat:@"Error, stopped early. Found %@ restaurants.", @(self.POIs.count)];
+        [self.toolbarLabel sizeToFit];
+    };
     // Debug callback
     self.searchQueue.debugCallback = ^(NSInteger count) { @strongify(self)
         self.toolbarLabel.text = [NSString stringWithFormat:@"Fetching %@ results… ", @(count)];

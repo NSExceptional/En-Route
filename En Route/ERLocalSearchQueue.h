@@ -27,5 +27,7 @@ typedef void (^IntBlock)(NSInteger timeLeft);
 @property (nonatomic, copy) IntBlock debugCallback;
 @property (nonatomic, copy) IntBlock pauseCallback;
 @property (nonatomic, copy) VoidBlock resumeCallback;
+/// Calls completion afterwards.
+@property (nonatomic, copy) VoidBlock errorCallback;
 
 @end
