@@ -99,4 +99,20 @@ static const CGFloat kLabelToFieldPadding = 8;
     }
 }
 
+- (BOOL)safe_drawsAsAtom {
+    return [[self valueForKey:@"drawsAsAtom"] boolValue];
+}
+
+- (void)safe_setDrawsAsAtom:(BOOL)drawsAsAtom {
+    [self setValue:@(drawsAsAtom) forKey:@"drawsAsAtom"];
+}
+
+- (int)safe_atomStyle {
+    return [[self valueForKey:@"atomStyle"] intValue];
+}
+
+- (void)safe_setAtomStyle:(int)atomStyle {
+    [self setValue:@(atomStyle) forKey:@"atomStyle"];
+}
+
 @end

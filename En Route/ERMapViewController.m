@@ -611,16 +611,16 @@ static BOOL trackUserInitially = YES;
 }
 
 // Demo code
-- (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            self.startTextField.text = @"Current location";
-            self.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
-            [self beginRouting];
-        });
-    });
-}
+//- (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
+//    static dispatch_once_t onceToken;
+//    dispatch_once(&onceToken, ^{
+//        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//            self.startTextField.text = @"Current location";
+//            self.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
+//            [self beginRouting];
+//        });
+//    });
+//}
 
 // Left this in this class because putting it in ERMapView caused the drop animation to disappear
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(nonnull id<MKAnnotation>)annotation {

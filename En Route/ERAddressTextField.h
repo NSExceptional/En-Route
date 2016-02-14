@@ -17,11 +17,7 @@
 - (void)_updateAtomBackground;
 - (void)_updateAtomTextColor;
 
-//@property (nonatomic) BOOL drawsAsAtom;
-//@property (nonatomic) int atomStyle;
-- (BOOL)drawsAsAtom;
-- (void)setDrawsAsAtom:(BOOL)b;
-- (int)atomStyle;
-- (void)setAtomStyle:(int)style;
+@property (nonatomic, getter=safe_drawsAsAtom, setter=safe_setDrawsAsAtom:) BOOL drawsAsAtom;
+@property (nonatomic, getter=safe_atomStyle, setter=safe_setAtomStyle:) int atomStyle;
 
 @end
