@@ -26,6 +26,7 @@
 		B4BE53451C4AD29E005F8216 /* ListItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = B4BE53441C4AD29E005F8216 /* ListItemCell.xib */; };
 		B4BE53471C4AD413005F8216 /* ListActivityCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = B4BE53461C4AD413005F8216 /* ListActivityCell.xib */; };
 		B4BE534A1C4AD6C6005F8216 /* NSIndexPath+Util.m in Sources */ = {isa = PBXBuildFile; fileRef = B4BE53491C4AD6C6005F8216 /* NSIndexPath+Util.m */; };
+		B4ED4B221C704CE400C6EA24 /* TBTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B4ED4B211C704CE400C6EA24 /* TBTableViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -63,6 +64,8 @@
 		B4BE53461C4AD413005F8216 /* ListActivityCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ListActivityCell.xib; sourceTree = "<group>"; };
 		B4BE53481C4AD6C6005F8216 /* NSIndexPath+Util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSIndexPath+Util.h"; sourceTree = "<group>"; };
 		B4BE53491C4AD6C6005F8216 /* NSIndexPath+Util.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSIndexPath+Util.m"; sourceTree = "<group>"; };
+		B4ED4B201C704CE400C6EA24 /* TBTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TBTableViewController.h; sourceTree = "<group>"; };
+		B4ED4B211C704CE400C6EA24 /* TBTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TBTableViewController.m; sourceTree = "<group>"; };
 		EDDF7E5BC73E9E7F9D682952 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		EE0C598ED700E1D7913EB82D /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -117,6 +120,8 @@
 		B468D8B81C49C33400AFC6A7 /* En Route */ = {
 			isa = PBXGroup;
 			children = (
+				B4ED4B201C704CE400C6EA24 /* TBTableViewController.h */,
+				B4ED4B211C704CE400C6EA24 /* TBTableViewController.m */,
 				B468D8BC1C49C33400AFC6A7 /* ERAppDelegate.h */,
 				B468D8BD1C49C33400AFC6A7 /* ERAppDelegate.m */,
 				B468D8D01C49C42800AFC6A7 /* ERMapViewController.h */,
@@ -282,6 +287,7 @@
 				B490FBE71C4A7ACC00717275 /* ERLocalSearchQueue.m in Sources */,
 				B4BE533D1C4AD0CE005F8216 /* ERListViewController.m in Sources */,
 				B4BE53431C4AD0FA005F8216 /* ERListActivityCell.m in Sources */,
+				B4ED4B221C704CE400C6EA24 /* TBTableViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -387,6 +393,22 @@
 				INFOPLIST_FILE = "En Route/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-l\"FLEX\"",
+					"-l\"MirrorKit\"",
+					"-l\"TBAlertController\"",
+					"-l\"libextobjc\"",
+					"-l\"sqlite3\"",
+					"-l\"z\"",
+					"-framework",
+					"\"CoreGraphics\"",
+					"-framework",
+					"\"Foundation\"",
+					"-framework",
+					"\"UIKit\"",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.pantsthief.En-Route";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -400,6 +422,22 @@
 				INFOPLIST_FILE = "En Route/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-l\"FLEX\"",
+					"-l\"MirrorKit\"",
+					"-l\"TBAlertController\"",
+					"-l\"libextobjc\"",
+					"-l\"sqlite3\"",
+					"-l\"z\"",
+					"-framework",
+					"\"CoreGraphics\"",
+					"-framework",
+					"\"Foundation\"",
+					"-framework",
+					"\"UIKit\"",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.pantsthief.En-Route";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

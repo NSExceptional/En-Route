@@ -14,14 +14,16 @@
 #import "MKPlacemark+MKPointAnnotation.h"
 #import "TBTimer.h"
 #import "ERListViewController.h"
+#import "TBTableViewController.h"
 
 #import <EXTScope.h>
+#import "MirrorKit.h"
 
 
-static const CGFloat kTFHeight          = 28;
-static const CGFloat kTFSidePadding     = 6;
-static const CGFloat kTFSpacing         = kTFSidePadding;
-static const CGFloat kTFBottomPadding   = 12;
+static const CGFloat kTFHeight        = 28;
+static const CGFloat kTFSidePadding   = 6;
+static const CGFloat kTFSpacing       = kTFSidePadding;
+static const CGFloat kTFBottomPadding = 12;
 
 static BOOL trackUserInitially = YES;
 
@@ -35,26 +37,28 @@ static BOOL trackUserInitially = YES;
 
 @property (nonatomic, readonly) UIBarButtonItem *clearButton;
 @property (nonatomic, readonly) UIBarButtonItem *routeButton;
+@property (nonatomic, readonly) UIBarButtonItem *searchButton;
 @property (nonatomic, readonly) UIBarButtonItem *listButton;
 @property (nonatomic, readonly) UILabel *toolbarLabel;
 
-@property (nonatomic) NSMutableSet *POIs;
-@property (nonatomic) NSMutableSet *latestPOIs;
-@property (nonatomic, readonly) NSArray *annotations;
-@property (nonatomic, readonly) NSArray *latestAnnotations;
+@property (nonatomic          ) NSMutableSet *POIs;
+@property (nonatomic          ) NSMutableSet *latestPOIs;
+@property (nonatomic, readonly) NSArray      *annotations;
+@property (nonatomic, readonly) NSArray      *latestAnnotations;
 
-@property (nonatomic, readonly) BOOL hideButtons;
-@property (nonatomic) MKAnnotationView *userLocationView;
-@property (nonatomic, readonly) MKUserLocation *userLocation;
-@property (nonatomic) MKAnnotationView *droppedPin;
+@property (nonatomic, readonly) BOOL             hideButtons;
+@property (nonatomic          ) MKAnnotationView *userLocationView;
+@property (nonatomic, readonly) MKUserLocation   *userLocation;
+@property (nonatomic          ) MKAnnotationView *droppedPin;
 
-@property (nonatomic) BOOL loadingResults;
-@property (nonatomic) ERLocalSearchQueue *searchQueue;
-
-@property (nonatomic, readonly) BOOL boolProperty;
-@property (nonatomic, readonly) NSInteger intProperty;
-@property (nonatomic, readonly) NSArray *arrayProperty;
-@property (nonatomic, readonly) NSString *dictionaryProperty;
+@property (nonatomic) BOOL                  loadingResults;
+@property (nonatomic) ERLocalSearchQueue    *searchQueue;
+@property (nonatomic) NSArray               *routes;
+@property (nonatomic) MKRoute               *selectedRoute;
+@property (nonatomic) NSInteger             selectedRouteIndex;
+@property (nonatomic) NSMutableArray        *renderers;
+@property (nonatomic) TBTableViewController *pickerController;
+@property (nonatomic) UITableViewCell       *selectedCell;
 
 @end
 
@@ -64,8 +68,11 @@ static BOOL trackUserInitially = YES;
 
 - (void)loadView {
     // Create MapView
-    self.view = [[ERMapView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    [super loadView];
+    _mapView  = [[ERMapView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    [self.view addSubview:_mapView];
     self.mapView.delegate = self;
+    //    [self.mapView.panningGestureRecognizer addTarget:self action:@selector(updateOverlays)];
     
     CGFloat screenWidth    = CGRectGetWidth([UIScreen mainScreen].bounds);
     CGFloat textFieldWidth = CGRectGetWidth([UIScreen mainScreen].bounds) - kTFSidePadding*2;
@@ -116,16 +123,13 @@ static BOOL trackUserInitially = YES;
     }
 }
 
-- (ERMapView *)mapView {
-    return (id)self.view;
-}
-
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.title = @"En Route";
-    self.POIs = [NSMutableSet set];
-    self.latestPOIs = [NSMutableSet set];
+    self.title  = @"En Route";
+    _POIs       = [NSMutableSet set];
+    _latestPOIs = [NSMutableSet set];
+    _renderers  = [NSMutableArray array];
     
     // Locaiton manager is used to get location permissions
     self.locationManager = [CLLocationManager new];
@@ -141,12 +145,13 @@ static BOOL trackUserInitially = YES;
     // Hide keyboard on tap
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self.startTextField action:@selector(resignFirstResponder)];
     [tap addTarget:self.endTextField action:@selector(resignFirstResponder)];
-    [self.view addGestureRecognizer:tap];
+    [self.mapView addGestureRecognizer:tap];
     
     // Navbar items
     [self hideNavBar];
     _clearButton = [[UIBarButtonItem alloc] initWithTitle:@"Clear" style:UIBarButtonItemStylePlain target:self action:@selector(clearButtonPressed)];
     _routeButton = [[UIBarButtonItem alloc] initWithTitle:@"Route" style:UIBarButtonItemStyleDone target:self action:@selector(beginRouting)];
+    _searchButton = [[UIBarButtonItem alloc] initWithTitle:@"Search" style:UIBarButtonItemStyleDone target:self action:@selector(searchRoute)];
     self.navigationController.toolbarHidden = NO;
     self.navigationItem.leftBarButtonItem   = _clearButton;
     self.navigationItem.rightBarButtonItem  = _routeButton;
@@ -202,17 +207,9 @@ static BOOL trackUserInitially = YES;
 #pragma mark - Actions
 
 - (void)clearButtonPressed {
-    // Remove overlays, clear fields
-    [self.mapView removeOverlays:self.mapView.overlays];
-    self.startTextField.text = nil;
-    self.endTextField.text = nil;
-    
-    // Remove annotations and POIs
-    [self.mapView removeAnnotations:self.mapView.annotations];
-    [self.POIs removeAllObjects];
-    self.toolbarLabel.text = nil;
-    
-    [self updateButtons];
+    [self prepareForDefaultState];
+    [self.startTextField resignFirstResponder];
+    [self.endTextField resignFirstResponder];
 }
 
 - (void)showList {
@@ -223,12 +220,15 @@ static BOOL trackUserInitially = YES;
 }
 
 - (void)beginRouting {
+    [self.startTextField resignFirstResponder];
+    [self.endTextField resignFirstResponder];
+    
     [self.mapView removeOverlays:self.mapView.overlays];
     [self.mapView removeAnnotations:self.mapView.resultAnnotations];
     [self.POIs removeAllObjects];
     self.toolbarLabel.text = nil;
     
-    [self updateButtons];
+    [self updateMapButtons];
     
     [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
     self.loadingResults = YES;
@@ -326,28 +326,51 @@ static BOOL trackUserInitially = YES;
     
     MKDirections *directions     = [[MKDirections alloc] initWithRequest:request];
     [directions calculateDirectionsWithCompletionHandler:^(MKDirectionsResponse *response, NSError *error) {
+        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+        self.loadingResults = NO;
         
         if (!error && response.routes.count) {
             // Add overlays, zoom
             [self.mapView addOverlays:[response.routes valueForKeyPath:@"@unionOfObjects.polyline"]];
             MKPolyline *line = (id)self.mapView.overlays.firstObject;
-            [self.mapView setVisibleMapRect:line.boundingMapRect edgePadding:UIEdgeInsetsMake(30, 10, 10, 10) animated:YES];
+            [self.mapView setVisibleMapRect:line.boundingMapRect edgePadding:UIEdgeInsetsMake(100, 10, 160, 10) animated:YES];
             
-            // Add annotations
-            [TBTimer startTimer];
-            [self searchRoutes:response.routes];
-            
+            [self showRoutePicker:response.routes];
         } else {
             [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not get directions"] showFromViewController:self];
-            [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-            self.loadingResults = NO;
             [self updateNavigationItems];
             self.toolbarLabel.text = nil;
         }
     }];
 }
 
-- (void)searchRoutes:(NSArray<MKRoute*> *)routes {
+- (void)showRoutePicker:(NSArray *)routes {
+    self.routes = routes;
+    self.selectedRoute = routes.firstObject;
+    [self prepareForSearchState];
+}
+
+- (void)setSelectedRoute:(MKRoute *)selectedRoute {
+    _selectedRoute = selectedRoute;
+    if (selectedRoute) {
+        for (MKPolylineRenderer *renderer in self.renderers) {
+            if (renderer.overlay == selectedRoute.polyline) {
+                renderer.lineWidth = 12;
+                renderer.alpha = 0.75;
+            } else {
+                renderer.lineWidth = 8;
+                renderer.alpha = 0.4;
+            }
+            [renderer setNeedsDisplayInMapRect:self.mapView.visibleMapRect];
+        }
+    }
+}
+
+- (void)searchRoute {
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+    self.loadingResults = YES;
+    [self prepareForResultsState];
+    [self updateNavigationItems];
     
     // Init queue
     @weakify(self);
@@ -375,7 +398,7 @@ static BOOL trackUserInitially = YES;
         [self.toolbarLabel sizeToFit];
     };
     
-    [self.searchQueue searchRoutes:routes repeatedCallback:^(NSArray *mapItems) {
+    [self.searchQueue searchRoutes:@[self.selectedRoute] repeatedCallback:^(NSArray *mapItems) {
         // Update map, order is important
         [self.latestPOIs setSet:[NSSet setWithArray:mapItems]];
         [self.latestPOIs minusSet:self.POIs];
@@ -389,7 +412,7 @@ static BOOL trackUserInitially = YES;
     } completion:^{
         // Remove queue, cleanup
         self.searchQueue = nil;
-        [self.latestPOIs setSet:[NSSet set]];
+        [self.latestPOIs removeAllObjects];
         self.loadingResults = NO;
         [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
         [self updateNavigationItems];
@@ -411,7 +434,7 @@ static BOOL trackUserInitially = YES;
     self.listButton.enabled = self.POIs.count > 0;
 }
 
-- (void)updateButtons {
+- (void)updateMapButtons {
     [self updateNavigationItems];
     
     if (self.hideButtons) {
@@ -431,7 +454,7 @@ static BOOL trackUserInitially = YES;
                 self.startTextField.text = @"Current location";
             }
             
-            [self updateButtons];
+            [self updateMapButtons];
         };
         self.userLocationView.leftCalloutAccessoryView = userCalloutView;
         
@@ -446,11 +469,121 @@ static BOOL trackUserInitially = YES;
                 self.startTextField.text = self.droppedPin.annotation.subtitle;
             }
             
-            [self updateButtons];
+            [self updateMapButtons];
         };
         
         self.droppedPin.leftCalloutAccessoryView = droppedPinButton;
     }
+}
+
+#pragma mark - View management
+
+- (void)setupInitialBarButtonItems {
+    _clearButton.enabled = NO;
+    _routeButton.enabled = NO;
+    self.navigationItem.leftBarButtonItem  = _clearButton;
+    self.navigationItem.rightBarButtonItem = _routeButton;
+}
+
+- (void)setupSearchBarButtonItems {
+    _clearButton.enabled = YES;
+    self.navigationItem.rightBarButtonItem = _searchButton;
+}
+
+- (void)setupResultsBarButtonItems {
+    _clearButton.enabled = YES;
+    self.navigationItem.rightBarButtonItem = nil;
+}
+
+- (void)resetMapView {
+    [_pickerController.tableView removeFromSuperview];
+    _pickerController = nil;
+    
+    // Remove overlays, clear fields
+    [self.mapView removeOverlays:self.mapView.overlays];
+    [self.renderers removeAllObjects];
+    self.startTextField.text = nil;
+    self.endTextField.text   = nil;
+    // Remove annotations and POIs
+    [self.mapView removeAnnotations:self.mapView.annotations];
+    self.toolbarLabel.text = nil;
+}
+
+- (void)resetMapData {
+    self.routes              = nil;
+    self.selectedRoute       = nil;
+    self.selectedRouteIndex  = 0;
+    self.selectedCell        = nil;
+    [self.POIs removeAllObjects];
+    [self.latestPOIs removeAllObjects];
+}
+
+
+- (void)prepareForDefaultState {
+    [self setupInitialBarButtonItems];
+    [self resetMapView];
+    [self resetMapData];
+    [self updateMapButtons];
+    
+    self.startTextField.userInteractionEnabled = YES;
+    self.endTextField.userInteractionEnabled = YES;
+}
+
+- (void)prepareForSearchState {
+    [self setupSearchBarButtonItems];
+    
+    self.toolbarLabel.text = nil;
+    
+    self.startTextField.userInteractionEnabled = NO;
+    self.endTextField.userInteractionEnabled = NO;
+    
+    _pickerController = [TBTableViewController new];
+    _pickerController.defaultCanSelectRow = YES;
+    _pickerController.tableView.tintColor = self.view.tintColor;
+    _pickerController.tableView.scrollEnabled = NO;
+    
+    NSMutableArray *titles = [NSMutableArray array];
+    for (NSInteger i = 1; i <= self.routes.count; i++)
+        [titles addObject:[NSString stringWithFormat:@"Route %@", @(i)]];
+    _pickerController.rowTitles = @[titles.copy];
+    
+    _pickerController.configureCellBlock = ^(UITableViewCell *cell, NSIndexPath *ip) {
+        cell.textLabel.textColor = [UIColor colorWithRed:0.973 green:0.271 blue:0.298 alpha:1.000];
+        cell.textLabel.font = [UIFont systemFontOfSize:17];
+        if (ip.row == _selectedRouteIndex) {
+            cell.accessoryType = UITableViewCellAccessoryCheckmark;
+            _selectedCell = cell;
+        }
+    };
+    
+    @weakify(self);
+    _pickerController.didSelectCellBlock = ^(UITableViewCell *cell, NSIndexPath *ip) { @strongify(self)
+        self.selectedCell.accessoryType = UITableViewCellAccessoryNone;
+        cell.accessoryType              = UITableViewCellAccessoryCheckmark;
+        self.selectedCell               = cell;
+        self.selectedRouteIndex         = ip.row;
+        self.selectedRoute              = self.routes[ip.row];
+    };
+    
+    CGSize contentSize = _pickerController.tableView.contentSize;
+    CGFloat y          = CGRectGetHeight(self.view.frame) - CGRectGetHeight(self.navigationController.toolbar.frame) - contentSize.height;
+    y                  += 1/[UIScreen mainScreen].scale;
+    CGFloat width      = CGRectGetWidth(self.view.frame);
+    _pickerController.tableView.frame = CGRectMake(0, y, width, contentSize.height);
+    [self.view addSubview:_pickerController.tableView];
+}
+
+- (void)prepareForResultsState {
+    [self setupResultsBarButtonItems];
+    [_pickerController.tableView removeFromSuperview];
+    _pickerController = nil;
+    
+    // Remove unselected overlays
+    for (id<MKOverlay> overlay in self.mapView.overlays)
+        if (overlay != self.selectedRoute.polyline)
+            [self.mapView removeOverlay:overlay];
+    
+    
 }
 
 #pragma mark - CLLocationManagerDelegate, MKMapViewDelegate
@@ -511,7 +644,7 @@ static BOOL trackUserInitially = YES;
                     self.startTextField.text = @"Current location";
                 }
                 
-                [self updateButtons];
+                [self updateMapButtons];
             };
         }
         
@@ -530,7 +663,8 @@ static BOOL trackUserInitially = YES;
             pin.calloutOffset        = CGPointMake(-8, 0);
             self.droppedPin = pin;
             
-            self.mapView.pinAddressLoadHandler = ^(NSString *address) {
+            @weakify(self);
+            self.mapView.pinAddressLoadHandler = ^(NSString *address) { @strongify(self)
                 
                 // Hide buttons if both fields are full
                 if (!self.hideButtons) {
@@ -545,7 +679,7 @@ static BOOL trackUserInitially = YES;
                             self.startTextField.text = address;
                         }
                         
-                        [self updateButtons];
+                        [self updateMapButtons];
                     };
                 }
             };
@@ -568,14 +702,22 @@ static BOOL trackUserInitially = YES;
 
 - (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(nonnull id<MKOverlay>)overlay {
     MKPolylineRenderer *renderer = [[MKPolylineRenderer alloc] initWithPolyline:overlay];
-    renderer.strokeColor = [UIColor colorWithRed:0.000 green:0.550 blue:1.000 alpha:1.000];
-    renderer.lineWidth = 7;
+    renderer.lineWidth = 8;
+    renderer.strokeColor = self.view.tintColor;//[UIColor colorWithRed:0.000 green:0.550 blue:1.000 alpha:1.000];
+    renderer.alpha = 0.4;
+    [self.renderers addObject:renderer];
     return renderer;
 }
 
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
     [[NSUserDefaults standardUserDefaults] setValue:MKStringFromMapRect(self.mapView.visibleMapRect) forKey:@"MapRekt"];
 }
+
+//- (void)updateOverlays {
+//    NSLog(@"============ Updating");
+//    for (MKOverlayRenderer *renderer in self.renderers)
+//        [renderer setNeedsDisplay];
+//}
 
 #pragma mark - UITextFieldDelegate
 
@@ -595,7 +737,7 @@ static BOOL trackUserInitially = YES;
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField {
-    [self updateButtons];
+    [self updateMapButtons];
 }
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField {

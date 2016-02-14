@@ -14,6 +14,8 @@ static const CGFloat kControlViewHeight = 140;
 
 @interface ERMapView : MKMapView
 
+@property (nonatomic, readonly, getter=_panningGestureRecognizer) UIPanGestureRecognizer *panningGestureRecognizer;
+
 @property (nonatomic) MKPointAnnotation *droppedPinAnnotation;
 @property (nonatomic, readonly) NSArray *resultAnnotations;
 @property (nonatomic, copy) void (^pinAddressLoadHandler)(NSString *address);

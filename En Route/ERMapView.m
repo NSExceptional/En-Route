@@ -10,6 +10,7 @@
 #import "MKPlacemark+MKPointAnnotation.h"
 
 @implementation ERMapView
+@dynamic panningGestureRecognizer;
 
 - (id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
