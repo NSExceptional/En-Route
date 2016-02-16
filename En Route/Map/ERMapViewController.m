@@ -7,17 +7,12 @@
 //
 
 #import "ERMapViewController.h"
-#import "TBAlertController.h"
 #import "ERCalloutView.h"
 #import "ERAddressTextField.h"
 #import "ERLocalSearchQueue.h"
 #import "MKPlacemark+MKPointAnnotation.h"
-#import "TBTimer.h"
 #import "ERListViewController.h"
 #import "TBTableViewController.h"
-
-#import <EXTScope.h>
-#import "MirrorKit.h"
 
 
 static const CGFloat kTFHeight        = 28;

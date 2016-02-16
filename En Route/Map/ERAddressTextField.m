@@ -7,7 +7,6 @@
 //
 
 #import "ERAddressTextField.h"
-#import "MirrorKit.h"
 
 static const CGFloat kLabelToFieldPadding = 8;
 

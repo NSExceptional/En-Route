@@ -12,7 +12,6 @@
 #import "ERListActivityCell.h"
 #import "NSIndexPath+Util.h"
 #import "MKPlacemark+MKPointAnnotation.h"
-#import "TBAlertController.h"
 
 
 static NSString * const kListItemReuse = @"listitemreuse";

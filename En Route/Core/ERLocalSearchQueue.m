@@ -7,7 +7,6 @@
 //
 
 #import "ERLocalSearchQueue.h"
-#import "TBTimer.h"
 
 #define RunBlock(block) if ( block ) block()
 #define RunBlockP(block, params) if ( block ) block( params )

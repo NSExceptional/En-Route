@@ -9,14 +9,8 @@
 #import "ERAppDelegate.h"
 #import "ERMapViewController.h"
 
-#import "FLEXManager.h"
-
-#import "MirrorKit.h"
-
 #import <MapKit/MKPolylineRenderer.h>
 
-@interface ERAppDelegate ()
-@end
 
 @implementation ERAppDelegate
 
