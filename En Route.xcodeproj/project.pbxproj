@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		6DEB0F8991A83810D51031FE /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EE0C598ED700E1D7913EB82D /* libPods.a */; };
+		B427A9871C8D1D5500018884 /* NSString+TemporaryFile.m in Sources */ = {isa = PBXBuildFile; fileRef = B427A9861C8D1D5500018884 /* NSString+TemporaryFile.m */; };
+		B427A98A1C8D22C400018884 /* MKMapItem+PostalAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = B427A9891C8D22C400018884 /* MKMapItem+PostalAddress.m */; };
+		B427A98D1C8D2AB500018884 /* ERMapItemActivityProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = B427A98C1C8D2AB500018884 /* ERMapItemActivityProvider.m */; };
 		B468D8BB1C49C33400AFC6A7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8BA1C49C33400AFC6A7 /* main.m */; };
 		B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8BD1C49C33400AFC6A7 /* ERAppDelegate.m */; };
 		B468D8C61C49C33400AFC6A7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B468D8C51C49C33400AFC6A7 /* Assets.xcassets */; };
@@ -27,10 +30,18 @@
 		B49A2CA01C72BCD0000752EF /* ERMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C991C72BCD0000752EF /* ERMapView.m */; };
 		B49A2CA11C72BCD0000752EF /* ERMapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C9B1C72BCD0000752EF /* ERMapViewController.m */; };
 		B49A2CA21C72BCD0000752EF /* TBTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C9D1C72BCD0000752EF /* TBTableViewController.m */; };
+		B49A2CA61C72C06E000752EF /* En-Route-Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2CA51C72C06E000752EF /* En-Route-Constants.m */; };
+		B4E3474D1C767489005597E4 /* ERMapNavigationBarBackground.m in Sources */ = {isa = PBXBuildFile; fileRef = B4E3474C1C767489005597E4 /* ERMapNavigationBarBackground.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		33393FC2D02729A40CD512E1 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
+		B427A9851C8D1D5500018884 /* NSString+TemporaryFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+TemporaryFile.h"; sourceTree = "<group>"; };
+		B427A9861C8D1D5500018884 /* NSString+TemporaryFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+TemporaryFile.m"; sourceTree = "<group>"; };
+		B427A9881C8D22C400018884 /* MKMapItem+PostalAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MKMapItem+PostalAddress.h"; sourceTree = "<group>"; };
+		B427A9891C8D22C400018884 /* MKMapItem+PostalAddress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MKMapItem+PostalAddress.m"; sourceTree = "<group>"; };
+		B427A98B1C8D2AB500018884 /* ERMapItemActivityProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERMapItemActivityProvider.h; sourceTree = "<group>"; };
+		B427A98C1C8D2AB500018884 /* ERMapItemActivityProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERMapItemActivityProvider.m; sourceTree = "<group>"; };
 		B468D8B61C49C33400AFC6A7 /* En Route.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "En Route.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B468D8BA1C49C33400AFC6A7 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		B468D8BC1C49C33400AFC6A7 /* ERAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ERAppDelegate.h; sourceTree = "<group>"; };
@@ -67,6 +78,10 @@
 		B49A2C9C1C72BCD0000752EF /* TBTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TBTableViewController.h; sourceTree = "<group>"; };
 		B49A2C9D1C72BCD0000752EF /* TBTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TBTableViewController.m; sourceTree = "<group>"; };
 		B49A2CA31C72BDA6000752EF /* En-Route-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "En-Route-Prefix.pch"; sourceTree = "<group>"; };
+		B49A2CA41C72C06E000752EF /* En-Route-Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "En-Route-Constants.h"; sourceTree = "<group>"; };
+		B49A2CA51C72C06E000752EF /* En-Route-Constants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "En-Route-Constants.m"; sourceTree = "<group>"; };
+		B4E3474B1C767489005597E4 /* ERMapNavigationBarBackground.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERMapNavigationBarBackground.h; sourceTree = "<group>"; };
+		B4E3474C1C767489005597E4 /* ERMapNavigationBarBackground.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERMapNavigationBarBackground.m; sourceTree = "<group>"; };
 		EDDF7E5BC73E9E7F9D682952 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		EE0C598ED700E1D7913EB82D /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -140,6 +155,8 @@
 				B468D8CA1C49C33400AFC6A7 /* Info.plist */,
 				B468D8BA1C49C33400AFC6A7 /* main.m */,
 				B49A2CA31C72BDA6000752EF /* En-Route-Prefix.pch */,
+				B49A2CA41C72C06E000752EF /* En-Route-Constants.h */,
+				B49A2CA51C72C06E000752EF /* En-Route-Constants.m */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -147,14 +164,16 @@
 		B49A2C731C72B85D000752EF /* Map */ = {
 			isa = PBXGroup;
 			children = (
+				B49A2C9A1C72BCD0000752EF /* ERMapViewController.h */,
+				B49A2C9B1C72BCD0000752EF /* ERMapViewController.m */,
+				B49A2C981C72BCD0000752EF /* ERMapView.h */,
+				B49A2C991C72BCD0000752EF /* ERMapView.m */,
+				B4E3474B1C767489005597E4 /* ERMapNavigationBarBackground.h */,
+				B4E3474C1C767489005597E4 /* ERMapNavigationBarBackground.m */,
 				B49A2C941C72BCD0000752EF /* ERAddressTextField.h */,
 				B49A2C951C72BCD0000752EF /* ERAddressTextField.m */,
 				B49A2C961C72BCD0000752EF /* ERCalloutView.h */,
 				B49A2C971C72BCD0000752EF /* ERCalloutView.m */,
-				B49A2C981C72BCD0000752EF /* ERMapView.h */,
-				B49A2C991C72BCD0000752EF /* ERMapView.m */,
-				B49A2C9A1C72BCD0000752EF /* ERMapViewController.h */,
-				B49A2C9B1C72BCD0000752EF /* ERMapViewController.m */,
 				B49A2C9C1C72BCD0000752EF /* TBTableViewController.h */,
 				B49A2C9D1C72BCD0000752EF /* TBTableViewController.m */,
 			);
@@ -170,6 +189,10 @@
 				B49A2C811C72BCC2000752EF /* NSIndexPath+Util.m */,
 				B49A2C821C72BCC2000752EF /* UIImage+Util.h */,
 				B49A2C831C72BCC2000752EF /* UIImage+Util.m */,
+				B427A9851C8D1D5500018884 /* NSString+TemporaryFile.h */,
+				B427A9861C8D1D5500018884 /* NSString+TemporaryFile.m */,
+				B427A9881C8D22C400018884 /* MKMapItem+PostalAddress.h */,
+				B427A9891C8D22C400018884 /* MKMapItem+PostalAddress.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -183,6 +206,8 @@
 				B49A2C8A1C72BCCA000752EF /* ERListItemCell.m */,
 				B49A2C8B1C72BCCA000752EF /* ERListViewController.h */,
 				B49A2C8C1C72BCCA000752EF /* ERListViewController.m */,
+				B427A98B1C8D2AB500018884 /* ERMapItemActivityProvider.h */,
+				B427A98C1C8D2AB500018884 /* ERMapItemActivityProvider.m */,
 				B49A2C8D1C72BCCA000752EF /* ListActivityCell.xib */,
 				B49A2C8E1C72BCCA000752EF /* ListItemCell.xib */,
 			);
@@ -308,16 +333,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B427A9871C8D1D5500018884 /* NSString+TemporaryFile.m in Sources */,
 				B49A2C7C1C72BCBC000752EF /* ERLocalSearchQueue.m in Sources */,
 				B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */,
 				B49A2C9E1C72BCD0000752EF /* ERAddressTextField.m in Sources */,
+				B427A98A1C8D22C400018884 /* MKMapItem+PostalAddress.m in Sources */,
 				B49A2C901C72BCCA000752EF /* ERListItemCell.m in Sources */,
 				B468D8BB1C49C33400AFC6A7 /* main.m in Sources */,
 				B49A2C841C72BCC2000752EF /* MKPlacemark+MKPointAnnotation.m in Sources */,
 				B49A2CA01C72BCD0000752EF /* ERMapView.m in Sources */,
 				B49A2C851C72BCC2000752EF /* NSIndexPath+Util.m in Sources */,
+				B4E3474D1C767489005597E4 /* ERMapNavigationBarBackground.m in Sources */,
+				B49A2CA61C72C06E000752EF /* En-Route-Constants.m in Sources */,
 				B49A2CA11C72BCD0000752EF /* ERMapViewController.m in Sources */,
 				B49A2C861C72BCC2000752EF /* UIImage+Util.m in Sources */,
+				B427A98D1C8D2AB500018884 /* ERMapItemActivityProvider.m in Sources */,
 				B49A2C9F1C72BCD0000752EF /* ERCalloutView.m in Sources */,
 				B49A2C7D1C72BCBC000752EF /* TBTimer.m in Sources */,
 				B49A2C8F1C72BCCA000752EF /* ERListActivityCell.m in Sources */,

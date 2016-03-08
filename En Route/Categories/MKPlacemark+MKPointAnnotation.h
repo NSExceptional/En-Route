@@ -7,11 +7,14 @@
 //
 
 @import MapKit;
-
+@class CNPostalAddress;
 
 @interface CLPlacemark (MKPointAnnotation)
 
+- (NSString *)vCardStringForLocationWithName:(NSString *)name;
+
 @property (nonatomic, readonly) NSString *formattedAddress;
 @property (nonatomic, readonly) MKPointAnnotation *pointAnnotation;
+@property (nonatomic, readonly) CNPostalAddress *postalAddress;
 
 @end

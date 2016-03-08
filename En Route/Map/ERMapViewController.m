@@ -8,27 +8,19 @@
 
 #import "ERMapViewController.h"
 #import "ERCalloutView.h"
-#import "ERAddressTextField.h"
+#import "ERMapNavigationBarBackground.h"
 #import "ERLocalSearchQueue.h"
 #import "MKPlacemark+MKPointAnnotation.h"
 #import "ERListViewController.h"
 #import "TBTableViewController.h"
 
 
-static const CGFloat kTFHeight        = 28;
-static const CGFloat kTFSidePadding   = 6;
-static const CGFloat kTFSpacing       = kTFSidePadding;
-static const CGFloat kTFBottomPadding = 12;
-
 static BOOL trackUserInitially = YES;
 
 @interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate, UITextFieldDelegate>
 
 @property (nonatomic) CLLocationManager *locationManager;
-
-@property (nonatomic, readonly) UIVisualEffectView *controlsBackgroundView;
-@property (nonatomic, readonly) ERAddressTextField *startTextField;
-@property (nonatomic, readonly) ERAddressTextField *endTextField;
+@property (nonatomic, readonly) ERMapNavigationBarBackground *barBackground;
 
 @property (nonatomic, readonly) UIBarButtonItem *clearButton;
 @property (nonatomic, readonly) UIBarButtonItem *routeButton;
@@ -69,44 +61,17 @@ static BOOL trackUserInitially = YES;
     self.mapView.delegate = self;
     //    [self.mapView.panningGestureRecognizer addTarget:self action:@selector(updateOverlays)];
     
-    CGFloat screenWidth    = CGRectGetWidth([UIScreen mainScreen].bounds);
-    CGFloat textFieldWidth = CGRectGetWidth([UIScreen mainScreen].bounds) - kTFSidePadding*2;
-    CGFloat hairlineHeight = 1.f/[UIScreen mainScreen].scale;
-    
-    // Setup nav bar thingy
-    _controlsBackgroundView       = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight]];
-    CGRect controlFrame           = CGRectMake(0, 0, screenWidth, kControlViewHeight);
-    CGFloat viewHeight            = CGRectGetHeight(controlFrame);
-    _controlsBackgroundView.frame = controlFrame;
-    
-    CGRect startFrame = CGRectMake(kTFSidePadding, (viewHeight-kTFBottomPadding) - kTFHeight*2 - kTFSpacing, textFieldWidth, kTFHeight);
-    CGRect endFrame   = CGRectMake(kTFSidePadding, (viewHeight-kTFBottomPadding) - kTFHeight, textFieldWidth, kTFHeight);
-    
-    // Place text fields
-    _startTextField = [[ERAddressTextField alloc] initWithFrame:startFrame];
-    _endTextField   = [[ERAddressTextField alloc] initWithFrame:endFrame];
-    _startTextField.nameLabel.text = @"Start:";
-    _endTextField.nameLabel.text   = @"End:";
-    _endTextField.fieldEntryOffset = _startTextField.estimatedFieldEntryOffset;
-    _startTextField.delegate = self;
-    _endTextField.delegate   = self;
+    // Navigation bar background view
+    _barBackground = [ERMapNavigationBarBackground backgroundForBar:self.navigationController.navigationBar];
+//    [self.navigationController.navigationBar setBackgroundView_:_barBackground];
+    [self.navigationController.navigationBar hideDefaultBackground];
+    [self.view addSubview:_barBackground];
+    _barBackground.startTextField.delegate = self;
+    _barBackground.endTextField.delegate   = self;
     
     // Toolbar label
     _toolbarLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 1, 1)];
     _toolbarLabel.font = [UIFont systemFontOfSize:12];
-    
-    // Nav bar hairline
-    UIView *hairline = ({
-        UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, viewHeight - hairlineHeight, screenWidth, hairlineHeight)];
-        view.backgroundColor = [UIColor colorWithWhite:0.000 alpha:0.301];
-        view;
-    });
-    
-    // Add subviews
-    [_controlsBackgroundView addSubview:_startTextField];
-    [_controlsBackgroundView addSubview:_endTextField];
-    [_controlsBackgroundView addSubview:hairline];
-    [self.mapView addSubview:_controlsBackgroundView];
     
     // Map rectangle
     NSString *rekt = [[NSUserDefaults standardUserDefaults] valueForKey:@"MapRekt"];
@@ -138,12 +103,11 @@ static BOOL trackUserInitially = YES;
     self.toolbarItems = @[userTrackingButton, spacer, label, spacer, _listButton];
     
     // Hide keyboard on tap
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self.startTextField action:@selector(resignFirstResponder)];
-    [tap addTarget:self.endTextField action:@selector(resignFirstResponder)];
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self.barBackground.startTextField action:@selector(resignFirstResponder)];
+    [tap addTarget:self.barBackground.endTextField action:@selector(resignFirstResponder)];
     [self.mapView addGestureRecognizer:tap];
     
     // Navbar items
-    [self hideNavBar];
     _clearButton = [[UIBarButtonItem alloc] initWithTitle:@"Clear" style:UIBarButtonItemStylePlain target:self action:@selector(clearButtonPressed)];
     _routeButton = [[UIBarButtonItem alloc] initWithTitle:@"Route" style:UIBarButtonItemStyleDone target:self action:@selector(beginRouting)];
     _searchButton = [[UIBarButtonItem alloc] initWithTitle:@"Search" style:UIBarButtonItemStyleDone target:self action:@selector(searchRoute)];
@@ -188,23 +152,12 @@ static BOOL trackUserInitially = YES;
     
 }
 
-#pragma mark - View customization
-
-- (void)hideNavBar {
-    // Make navigation bar transparent
-    self.navigationController.navigationBar.backgroundColor = [UIColor clearColor];
-    self.navigationController.navigationBar.barTintColor    = [UIColor clearColor];
-    self.navigationController.navigationBar.translucent     = YES;
-    self.navigationController.navigationBar.shadowImage     = [UIImage new];
-    [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
-}
-
 #pragma mark - Actions
 
 - (void)clearButtonPressed {
     [self prepareForDefaultState];
-    [self.startTextField resignFirstResponder];
-    [self.endTextField resignFirstResponder];
+    [self.barBackground.startTextField resignFirstResponder];
+    [self.barBackground.endTextField resignFirstResponder];
 }
 
 - (void)showList {
@@ -215,8 +168,8 @@ static BOOL trackUserInitially = YES;
 }
 
 - (void)beginRouting {
-    [self.startTextField resignFirstResponder];
-    [self.endTextField resignFirstResponder];
+    [self.barBackground.startTextField resignFirstResponder];
+    [self.barBackground.endTextField resignFirstResponder];
     
     [self.mapView removeOverlays:self.mapView.overlays];
     [self.mapView removeAnnotations:self.mapView.resultAnnotations];
@@ -237,12 +190,12 @@ static BOOL trackUserInitially = YES;
 }
 
 - (void)getStartPlacemark:(void(^)(MKPlacemark *start))callback {
-    if ([self.startTextField.text isEqualToString:@"Current location"]) {
+    if ([self.barBackground.startTextField.text isEqualToString:kCurrentLocationText]) {
         NSParameterAssert(self.userLocation);
         CLLocation *location = [self.userLocation valueForKey:@"location"];
         callback([[MKPlacemark alloc] initWithCoordinate:location.coordinate addressDictionary:nil]);
     } else {
-        [[CLGeocoder new] geocodeAddressString:self.startTextField.text completionHandler:^(NSArray *placemark, NSError *error) {
+        [[CLGeocoder new] geocodeAddressString:self.barBackground.startTextField.text completionHandler:^(NSArray *placemark, NSError *error) {
             if (placemark && placemark.count) {
                 MKPlacemark *start = [[MKPlacemark alloc] initWithPlacemark:placemark[0]];
                 callback(start);
@@ -257,10 +210,10 @@ static BOOL trackUserInitially = YES;
 }
 
 - (void)getEndPlacemark:(void(^)(MKPlacemark *end))callback {
-    if ([self.endTextField.text isEqualToString:@"Current location"]) {
+    if ([self.barBackground.endTextField.text isEqualToString:kCurrentLocationText]) {
         callback([[MKPlacemark alloc] initWithCoordinate:[[self.userLocation valueForKey:@"location"] coordinate] addressDictionary:nil]);
     } else {
-        [[CLGeocoder new] geocodeAddressString:self.endTextField.text completionHandler:^(NSArray *placemark, NSError *error) {
+        [[CLGeocoder new] geocodeAddressString:self.barBackground.endTextField.text completionHandler:^(NSArray *placemark, NSError *error) {
             if (placemark && placemark.count) {
                 MKPlacemark *end = [[MKPlacemark alloc] initWithPlacemark:placemark[0]];
                 callback(end);
@@ -350,10 +303,10 @@ static BOOL trackUserInitially = YES;
     if (selectedRoute) {
         for (MKPolylineRenderer *renderer in self.renderers) {
             if (renderer.overlay == selectedRoute.polyline) {
-                renderer.lineWidth = 12;
+                renderer.lineWidth = 10;
                 renderer.alpha = 0.75;
             } else {
-                renderer.lineWidth = 8;
+                renderer.lineWidth = 7;
                 renderer.alpha = 0.4;
             }
             [renderer setNeedsDisplayInMapRect:self.mapView.visibleMapRect];
@@ -419,12 +372,12 @@ static BOOL trackUserInitially = YES;
 }
 
 - (BOOL)hideButtons {
-    return _startTextField.text.length > 0 && _endTextField.text.length > 0;
+    return _barBackground.startTextField.text.length > 0 && _barBackground.endTextField.text.length > 0;
 }
 
 - (void)updateNavigationItems {
     // Clear enabled if any text, Go enabled if both text
-    self.clearButton.enabled  = !self.loadingResults && (_startTextField.text.length || _endTextField.text.length);
+    self.clearButton.enabled  = !self.loadingResults && (_barBackground.startTextField.text.length || _barBackground.endTextField.text.length);
     self.routeButton.enabled = !self.loadingResults && self.hideButtons;
     self.listButton.enabled = self.POIs.count > 0;
 }
@@ -440,13 +393,13 @@ static BOOL trackUserInitially = YES;
         // User location button
         ERCalloutView *userCalloutView       = [ERCalloutView viewForAnnotation:self.userLocationView];
         userCalloutView.buttonTitleYOffset   += 5;
-        userCalloutView.useDestinationButton = self.startTextField.text.length > 0;
+        userCalloutView.useDestinationButton = self.barBackground.startTextField.text.length > 0;
         userCalloutView.buttonTapHandler     = ^{
             [self.mapView deselectAnnotation:self.userLocationView.annotation animated:YES];
-            if (self.startTextField.text.length > 0) {
-                self.endTextField.text = @"Current location";
+            if (self.barBackground.startTextField.text.length > 0) {
+                self.barBackground.endTextField.text = kCurrentLocationText;
             } else {
-                self.startTextField.text = @"Current location";
+                self.barBackground.startTextField.text = kCurrentLocationText;
             }
             
             [self updateMapButtons];
@@ -455,13 +408,13 @@ static BOOL trackUserInitially = YES;
         
         // Dropped pin button
         ERCalloutView *droppedPinButton       = [ERCalloutView viewForAnnotation:self.droppedPin];
-        droppedPinButton.useDestinationButton = self.startTextField.text.length > 0;
+        droppedPinButton.useDestinationButton = self.barBackground.startTextField.text.length > 0;
         droppedPinButton.buttonTapHandler     = ^{
             [self.mapView deselectAnnotation:self.droppedPin.annotation animated:YES];
-            if (self.startTextField.text.length > 0) {
-                self.endTextField.text = self.droppedPin.annotation.subtitle;
+            if (self.barBackground.startTextField.text.length > 0) {
+                self.barBackground.endTextField.text = self.droppedPin.annotation.subtitle;
             } else {
-                self.startTextField.text = self.droppedPin.annotation.subtitle;
+                self.barBackground.startTextField.text = self.droppedPin.annotation.subtitle;
             }
             
             [self updateMapButtons];
@@ -497,8 +450,8 @@ static BOOL trackUserInitially = YES;
     // Remove overlays, clear fields
     [self.mapView removeOverlays:self.mapView.overlays];
     [self.renderers removeAllObjects];
-    self.startTextField.text = nil;
-    self.endTextField.text   = nil;
+    self.barBackground.startTextField.text = nil;
+    self.barBackground.endTextField.text   = nil;
     // Remove annotations and POIs
     [self.mapView removeAnnotations:self.mapView.annotations];
     self.toolbarLabel.text = nil;
@@ -520,8 +473,8 @@ static BOOL trackUserInitially = YES;
     [self resetMapData];
     [self updateMapButtons];
     
-    self.startTextField.userInteractionEnabled = YES;
-    self.endTextField.userInteractionEnabled = YES;
+    self.barBackground.startTextField.userInteractionEnabled = YES;
+    self.barBackground.endTextField.userInteractionEnabled = YES;
 }
 
 - (void)prepareForSearchState {
@@ -529,8 +482,8 @@ static BOOL trackUserInitially = YES;
     
     self.toolbarLabel.text = nil;
     
-    self.startTextField.userInteractionEnabled = NO;
-    self.endTextField.userInteractionEnabled = NO;
+    self.barBackground.startTextField.userInteractionEnabled = NO;
+    self.barBackground.endTextField.userInteractionEnabled = NO;
     
     _pickerController = [TBTableViewController new];
     _pickerController.defaultCanSelectRow = YES;
@@ -545,6 +498,7 @@ static BOOL trackUserInitially = YES;
     _pickerController.configureCellBlock = ^(UITableViewCell *cell, NSIndexPath *ip) {
         cell.textLabel.textColor = [UIColor colorWithRed:0.973 green:0.271 blue:0.298 alpha:1.000];
         cell.textLabel.font = [UIFont systemFontOfSize:17];
+        cell.selectedBackgroundView = ({UIView *view = [UIView new]; view.backgroundColor = [UIColor colorWithWhite:0.000 alpha:0.198]; view;});
         if (ip.row == _selectedRouteIndex) {
             cell.accessoryType = UITableViewCellAccessoryCheckmark;
             _selectedCell = cell;
@@ -560,12 +514,19 @@ static BOOL trackUserInitially = YES;
         self.selectedRoute              = self.routes[ip.row];
     };
     
+    CGFloat pxheight   = 1/[UIScreen mainScreen].scale;
     CGSize contentSize = _pickerController.tableView.contentSize;
     CGFloat y          = CGRectGetHeight(self.view.frame) - CGRectGetHeight(self.navigationController.toolbar.frame) - contentSize.height;
-    y                  += 1/[UIScreen mainScreen].scale;
+    y                  += pxheight;
     CGFloat width      = CGRectGetWidth(self.view.frame);
     _pickerController.tableView.frame = CGRectMake(0, y, width, contentSize.height);
     [self.view addSubview:_pickerController.tableView];
+    UIView *hairline = ({
+        UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, pxheight)];
+        view.backgroundColor = [UIColor colorWithWhite:0.000 alpha:0.200];
+        view;
+    });
+    [_pickerController.tableView addSubview:hairline];
 }
 
 - (void)prepareForResultsState {
@@ -605,17 +566,21 @@ static BOOL trackUserInitially = YES;
     }
 }
 
-// Demo code
-//- (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
-//    static dispatch_once_t onceToken;
-//    dispatch_once(&onceToken, ^{
-//        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-//            self.startTextField.text = @"Current location";
-//            self.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
-//            [self beginRouting];
-//        });
-//    });
-//}
+- (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
+    if (!self.barBackground.startTextField.text.length) {
+        self.barBackground.startTextField.text = kCurrentLocationText;
+    } else if (!self.barBackground.endTextField.text.length) {
+        self.barBackground.endTextField.text = kCurrentLocationText;
+    }
+    //     Demo code
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            self.barBackground.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
+            [self beginRouting];
+        });
+    });
+}
 
 // Left this in this class because putting it in ERMapView caused the drop animation to disappear
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(nonnull id<MKAnnotation>)annotation {
@@ -628,15 +593,15 @@ static BOOL trackUserInitially = YES;
         if (!self.hideButtons) {
             ERCalloutView *calloutView       = [ERCalloutView viewForAnnotation:user];
             calloutView.buttonTitleYOffset   += 5;
-            calloutView.useDestinationButton = self.startTextField.text.length > 0;
+            calloutView.useDestinationButton = self.barBackground.startTextField.text.length > 0;
             user.leftCalloutAccessoryView    = calloutView;
             
             calloutView.buttonTapHandler     = ^{
                 [self.mapView deselectAnnotation:annotation animated:YES];
-                if (self.startTextField.text.length > 0) {
-                    self.endTextField.text = @"Current location";
+                if (self.barBackground.startTextField.text.length > 0) {
+                    self.barBackground.endTextField.text = kCurrentLocationText;
                 } else {
-                    self.startTextField.text = @"Current location";
+                    self.barBackground.startTextField.text = kCurrentLocationText;
                 }
                 
                 [self updateMapButtons];
@@ -664,14 +629,14 @@ static BOOL trackUserInitially = YES;
                 // Hide buttons if both fields are full
                 if (!self.hideButtons) {
                     ERCalloutView *calloutView       = [ERCalloutView viewForAnnotation:pin];
-                    calloutView.useDestinationButton = self.startTextField.text.length > 0;
+                    calloutView.useDestinationButton = self.barBackground.startTextField.text.length > 0;
                     pin.leftCalloutAccessoryView     = calloutView;
                     calloutView.buttonTapHandler     = ^{
                         [self.mapView deselectAnnotation:annotation animated:YES];
-                        if (self.startTextField.text.length > 0) {
-                            self.endTextField.text = address;
+                        if (self.barBackground.startTextField.text.length > 0) {
+                            self.barBackground.endTextField.text = address;
                         } else {
-                            self.startTextField.text = address;
+                            self.barBackground.startTextField.text = address;
                         }
                         
                         [self updateMapButtons];
@@ -717,9 +682,9 @@ static BOOL trackUserInitially = YES;
 #pragma mark - UITextFieldDelegate
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
-    if (textField == _startTextField) {
+    if (textField == _barBackground.startTextField) {
         // Go to the next text field
-        [_endTextField becomeFirstResponder];
+        [_barBackground.endTextField becomeFirstResponder];
     } else {
         // Only resign responder if text length
         if (textField.text.length) {

@@ -15,11 +15,36 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
     
+    self.layoutMargins = UIEdgeInsetsZero;
     self.chevron.image = [[UIImage imageNamed:@"chevron"] tintedImageWithColor:[UIColor lightGrayColor]];
 }
 
+- (void)setFlipped:(BOOL)flipped {
+    if (_flipped == flipped) return;
+    if (_flipped) {
+        self.chevron.transform = CGAffineTransformMakeRotation(0);
+        self.separatorInset = UIEdgeInsetsMake(0, 15, 0, 0);
+    } else {
+        self.chevron.transform = CGAffineTransformMakeRotation(M_PI);
+        self.separatorInset = UIEdgeInsetsZero;
+    }
+    
+    _flipped = flipped;
+}
+
 - (void)flipChevron {
-    self.chevron.layer.affineTransform = CGAffineTransformMakeRotation(M_PI);
+    BOOL flipped = self.flipped;
+    _flipped = !_flipped;
+    
+    [UIView animateWithDuration:.2 animations:^{
+        if (flipped) {
+            self.chevron.transform = CGAffineTransformMakeRotation(0);
+            self.separatorInset = UIEdgeInsetsMake(0, 15, 0, 0);
+        } else {
+            self.chevron.transform = CGAffineTransformMakeRotation(M_PI);
+            self.separatorInset = UIEdgeInsetsZero;
+        }
+    }];
 }
 
 @end

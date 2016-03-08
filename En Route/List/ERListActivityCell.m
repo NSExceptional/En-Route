@@ -11,9 +11,12 @@
 @implementation ERListActivityCell
 
 - (void)awakeFromNib {
+    self.layoutMargins = UIEdgeInsetsZero;
+    
     self.backgroundColor = nil;
     self.contentView.backgroundColor = nil;
     self.icon.layer.cornerRadius = 7;
+    self.icon.layer.masksToBounds = YES;
 }
 
 @end

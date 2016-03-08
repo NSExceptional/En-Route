@@ -45,8 +45,8 @@ static const CGFloat kLabelToFieldPadding = 8;
 }
 
 - (void)layoutSubviews {
-    
     [self.nameLabel sizeToFit];
+    
     CGRect frame = _nameLabel.frame;
     frame.origin.x = 6;
     frame.origin.y = (self.frame.size.height - frame.size.height) / 2.f;
@@ -76,18 +76,18 @@ static const CGFloat kLabelToFieldPadding = 8;
     // which causes CGRectInset to return a null rect in some cases.
     if (bounds.size.width == 100)
         return [super textRectForBounds:bounds];
-    return CGRectInset(bounds, _fieldEntryOffset, 0);
+    return CGRectInsetLeft(bounds, _fieldEntryOffset, 0);
 }
 
 - (CGRect)editingRectForBounds:(CGRect)bounds {
-    return CGRectInset(bounds, _fieldEntryOffset, 0);
+    return CGRectInsetLeft(bounds, _fieldEntryOffset, 0);
 }
 
 #pragma mark - Parent overrides
 
 - (void)setText:(NSString *)text {
     [super setText:text];
-    self.drawsAsAtom = [text isEqualToString:@"Current location"];
+    self.drawsAsAtom = [text isEqualToString:kCurrentLocationText];
 }
 
 - (void)setTextColor:(UIColor *)textColor {

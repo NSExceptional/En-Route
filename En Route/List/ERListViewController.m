@@ -7,11 +7,13 @@
 //
 
 @import MapKit;
+@import Contacts;
 #import "ERListViewController.h"
 #import "ERListItemCell.h"
 #import "ERListActivityCell.h"
 #import "NSIndexPath+Util.h"
 #import "MKPlacemark+MKPointAnnotation.h"
+#import "ERMapItemActivityProvider.h"
 
 
 static NSString * const kListItemReuse = @"listitemreuse";
@@ -44,7 +46,7 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
     self.expandedIndex = NSNotFound;
     
     self.availableOptions = 4;
-    if (![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"yelp:"]])
+    if (![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"yelp4://"]])
         _availableOptions--;
     if (![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]])
         _availableOptions--;
@@ -77,12 +79,21 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    // Flip selected cell and previously expanded row, if any
+    ERListItemCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    [cell flipChevron];
+    if (self.expandedIndex != NSNotFound && self.expandedIndex != indexPath.row) {
+        cell = [tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:self.expandedIndex inSection:0]];
+        [cell flipChevron];
+    }
+    
     [tableView beginUpdates];
     
     // Expand row when none are open
     if (self.expandedIndex == NSNotFound) {
-        [self expandRow:indexPath.row];
         self.expandedIndex = indexPath.row;
+        [self expandRow:indexPath.row];
     }
     // Initiate action for expanded row
     else if (NSLocationInRange(indexPath.row, NSMakeRange(self.expandedIndex+1, self.availableOptions))) {
@@ -113,12 +124,24 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
     else if (indexPath.row > self.expandedIndex) {
         // The order here is important
         [self collapseRow:self.expandedIndex];
-        [self expandRow:indexPath.row - self.availableOptions];
-        self.expandedIndex = indexPath.row - self.availableOptions;
+        self.expandedIndex = NSNotFound;
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [tableView beginUpdates];
+            self.expandedIndex = indexPath.row - self.availableOptions;
+            [self expandRow:self.expandedIndex];
+            [tableView endUpdates];
+        });
     } else {
         [self collapseRow:self.expandedIndex];
-        [self expandRow:indexPath.row];
-        self.expandedIndex = indexPath.row;
+        self.expandedIndex = NSNotFound;
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [tableView beginUpdates];
+            self.expandedIndex = indexPath.row;
+            [self expandRow:indexPath.row];
+            [tableView endUpdates];
+        });
     }
     
     [tableView endUpdates];
@@ -131,6 +154,13 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
         NSInteger row = indexPath.row - self.expandedIndex - 1;
         
         ERListActivityCell *cell = [tableView dequeueReusableCellWithIdentifier:kListActivityReuse forIndexPath:indexPath];
+        
+        // Separator line on last share cell
+        if (row == (self.availableOptions-1)) {
+            cell.separatorInset = UIEdgeInsetsZero;
+        } else {
+            cell.separatorInset = self.tableView.separatorInset;
+        }
         
         switch (row) {
             case 0:
@@ -155,14 +185,27 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
     }
     
     NSInteger idx = indexPath.row;
+    ERListItemCell *cell = [self.tableView dequeueReusableCellWithIdentifier:kListItemReuse forIndexPath:indexPath];
+    
+    // Separator line on expanded cell
+    cell.flipped = idx == self.expandedIndex;
+    if (cell.flipped) {
+        cell.separatorInset = UIEdgeInsetsZero;
+    } else {
+        cell.separatorInset = self.tableView.separatorInset;
+    }
+    
+    // Offset idx into model because of expanded rows options
     if (self.expandedIndex != NSNotFound && indexPath.row > self.expandedIndex)
         idx -= self.availableOptions;
     
     MKMapItem *item         = self.items[idx];
-    ERListItemCell *cell    = [self.tableView dequeueReusableCellWithIdentifier:kListItemReuse forIndexPath:indexPath];
-    
     cell.titleLabel.text    = item.placemark.name;
-    cell.distanceLabel.text = self.distances[idx];
+    if (self.currentLocation) {
+        cell.distanceLabel.text = self.distances[idx];
+    } else {
+        cell.distanceLabel.text = nil;
+    }
     
     return cell;
 }
@@ -180,11 +223,29 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
 #pragma mark - Row expansion
 
 - (void)expandRow:(NSInteger)row {
+    NSIndexPath *ip = [NSIndexPath indexPathForItem:row inSection:0];
+    
+    // Reload to fade separator inset from expanded row
+//    [self.tableView reloadRowsAtIndexPaths:@[ip] withRowAnimation:UITableViewRowAnimationNone];
     NSArray *toInsert = [NSIndexPath indexPathsInSection:0 inRange:NSMakeRange(row+1, self.availableOptions)];
     [self.tableView insertRowsAtIndexPaths:toInsert withRowAnimation:UITableViewRowAnimationFade];
 }
 
 - (void)collapseRow:(NSInteger)row {
+    NSIndexPath *ip = [NSIndexPath indexPathForItem:row inSection:0];
+    
+    // Reload to fade out separator inset on previously expanded row
+//    [self.tableView reloadRowsAtIndexPaths:@[ip] withRowAnimation:UITableViewRowAnimationNone];
+    NSArray *toDelete = [NSIndexPath indexPathsInSection:0 inRange:NSMakeRange(row+1, self.availableOptions)];
+    [self.tableView deleteRowsAtIndexPaths:toDelete withRowAnimation:UITableViewRowAnimationFade];
+}
+
+- (void)expandRowNoRefresh:(NSInteger)row {
+    NSArray *toInsert = [NSIndexPath indexPathsInSection:0 inRange:NSMakeRange(row+1, self.availableOptions)];
+    [self.tableView insertRowsAtIndexPaths:toInsert withRowAnimation:UITableViewRowAnimationFade];
+}
+
+- (void)collapseRowNoRefresh:(NSInteger)row {
     NSArray *toDelete = [NSIndexPath indexPathsInSection:0 inRange:NSMakeRange(row+1, self.availableOptions)];
     [self.tableView deleteRowsAtIndexPaths:toDelete withRowAnimation:UITableViewRowAnimationFade];
 }
@@ -192,6 +253,7 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
 #pragma mark - Actions
 
 - (void)showShareSheetForMapItem:(MKMapItem *)item {
+    //    ERMapItemActivityProvider *provider = [ERMapItemActivityProvider withName:item.name vCard:[item.placemark vCardStringForLocationWithName:item.name]];
     UIActivityViewController *share = [[UIActivityViewController alloc] initWithActivityItems:@[item.name, item.url] applicationActivities:nil];
     [self presentViewController:share animated:YES completion:nil];
 }
@@ -209,7 +271,9 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
 }
 
 - (void)openPlacemarkInYelp:(MKPlacemark *)placemark {
-    [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"I didn't get to this yet..."] showFromViewController:self];
+    NSMutableString *url = [NSString stringWithFormat:@"yelp4:///search?terms=%@&location=%@", placemark.name, placemark.formattedAddress].mutableCopy;
+    [url replaceOccurrencesOfString:@" +" withString:@"+" options:NSRegularExpressionSearch range:NSMakeRange(0, url.length)];
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
 }
 
 @end

@@ -25,13 +25,9 @@
     tap.numberOfTouchesRequired = 3;
     [self.window addGestureRecognizer:tap];
     
-    //    MKMethod *applystroke = [MKMethod methodForSelector:@selector(applyStrokePropertiesToContext:atZoomScale:) class:[MKPolylineRenderer class]];
-    //    IMP oldImp = applystroke.implementation;
-    //    applystroke.implementation = imp_implementationWithBlock(^(MKPolylineRenderer *me, CGContextRef context, MKZoomScale scale) {
-    //        ((void(*)(id, SEL, CGContextRef, MKZoomScale))oldImp)(me, @selector(applyStrokePropertiesToContext:atZoomScale:), context, scale);
-    //        CGContextSetLineWidth(context, me.lineWidth/scale);
-    //        NSLog(@"\n\n============= Applying stroke =============\n\n");
-    //    });
+#if TARGET_IPHONE_SIMULATOR
+    [[FLEXManager sharedManager] showExplorer];
+#endif
     
     return YES;
 }
