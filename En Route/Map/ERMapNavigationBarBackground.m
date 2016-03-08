@@ -19,6 +19,13 @@ static const CGFloat kTFBottomPadding   = 12;
 @interface ERMapNavigationBarBackground ()
 @property (nonatomic, readonly) UIVisualEffectView *controlsBackgroundView;
 @property (nonatomic, readonly) UIView *hairline;
+@property (nonatomic) BOOL isShrinkingOrGrowing;
+
+@property (nonatomic) UIImageView *startImageView;
+@property (nonatomic) UIImageView *endImageView;
+
+@property (nonatomic, readonly) UIImage *defaultStartImage;
+@property (nonatomic, readonly) UIImage *defaultendImage;
 @end
 
 @implementation ERMapNavigationBarBackground
@@ -26,7 +33,7 @@ static const CGFloat kTFBottomPadding   = 12;
 + (instancetype)backgroundForBar:(UINavigationBar *)bar {
     CGRect r = bar.bounds;
     r.size.height = kControlViewHeight;
-//    r.origin.y = -20;
+    //    r.origin.y = -20;
     return [[self alloc] initWithFrame:r];
 }
 
@@ -64,6 +71,8 @@ static const CGFloat kTFBottomPadding   = 12;
 - (void)layoutSubviews {
     [super layoutSubviews];
     
+    if (self.isShrinkingOrGrowing) return;
+    
     CGFloat viewHeight = CGRectGetHeight(self.frame);
     CGFloat textFieldWidth = CGRectGetWidth(self.frame) - kTFSidePadding*2;
     CGFloat hairlineHeight = 1.f/[UIScreen mainScreen].scale;
@@ -77,6 +86,105 @@ static const CGFloat kTFBottomPadding   = 12;
     _hairline.frame       = CGRectMake(0, viewHeight - hairlineHeight, CGRectGetWidth(self.frame), hairlineHeight);
 }
 
+- (void)didMoveToSuperview {
+    [super didMoveToSuperview];
+    
+    _defaultStartImage = [self.startTextField asImage];
+    _defaultendImage = [self.endTextField asImage];
+}
+
+- (void)setShrunken:(BOOL)shrunken {
+    if (_shrunken == shrunken) return;
+    _shrunken = shrunken;
+    
+    // Add dummy views, hide actual views
+    if (shrunken) {
+        [self replaceViewsWithImages];
+    } else {
+        [self updateImageViews];
+    }
+    
+    self.isShrinkingOrGrowing = YES;
+    [UIView animateWithDuration:.2 animations:^{
+        if (_shrunken)
+            [self shrink];
+        else
+            [self grow];
+    } completion:^(BOOL finished) {
+        self.isShrinkingOrGrowing = NO;
+        
+        // Remove dummy views
+        if (!shrunken) {
+            self.startTextField.hidden = NO;
+            self.endTextField.hidden = NO;
+            
+            [self.startImageView removeFromSuperview];
+            [self.endImageView removeFromSuperview];
+            
+            self.startImageView = nil;
+            self.endImageView = nil;
+        }
+    }];
+}
+
+- (void)replaceViewsWithImages {
+    self.startImageView = [[UIImageView alloc] initWithImage:[self.startTextField asImage]];
+    self.endImageView   = [[UIImageView alloc] initWithImage:[self.endTextField asImage]];
+    
+    self.startImageView.frame = self.startTextField.frame;
+    self.endImageView.frame = self.endTextField.frame;
+    
+    self.startTextField.hidden = YES;
+    self.endTextField.hidden = YES;
+    
+    [_controlsBackgroundView addSubview:self.startImageView];
+    [_controlsBackgroundView addSubview:self.endImageView];
+}
+
+- (void)updateImageViews {
+    self.startImageView.image = self.defaultStartImage;
+    self.endImageView.image = self.defaultendImage;
+}
+
+- (void)shrink {
+    CGFloat viewHeight = 64;
+    CGFloat hairlineHeight = 1.f/[UIScreen mainScreen].scale;
+    CGFloat tfRatio = CGRectGetWidth(_startTextField.frame) / CGRectGetHeight(_startTextField.frame);
+    CGFloat textFieldWidth = tfRatio;
+    CGFloat centerX = self.center.x - tfRatio/2.f;
+    
+    [self setFrameHeight:viewHeight];
+    _controlsBackgroundView.frame = self.frame;
+    [self.hairline setFrameY:viewHeight - hairlineHeight];
+    
+    [self.startImageView setFrameSize:CGSizeMake(textFieldWidth, 1)];
+    [self.endImageView setFrameSize:CGSizeMake(textFieldWidth, 1)];
+    
+    [self.startImageView setFrameOrigin:CGPointMake(centerX, viewHeight - kTFSidePadding - kTFBottomPadding - 1)];
+    [self.endImageView setFrameOrigin:CGPointMake(centerX, viewHeight - kTFBottomPadding - 1)];
+    
+    self.startImageView.alpha = 0;
+    self.endImageView.alpha = 0;
+}
+
+- (void)grow {
+    [self setFrameHeight:kControlViewHeight];
+    
+    CGFloat viewHeight = kControlViewHeight;
+    CGFloat hairlineHeight = 1.f/[UIScreen mainScreen].scale;
+    
+    CGRect r = self.frame;
+    r.origin.y = 0;
+    _controlsBackgroundView.frame = r;
+    
+    self.startImageView.frame = self.startTextField.frame;
+    self.endImageView.frame   = self.endTextField.frame;
+    self.hairline.frame   = CGRectMake(0, viewHeight - hairlineHeight, CGRectGetWidth(self.frame), hairlineHeight);
+    
+    self.startImageView.alpha = 1;
+    self.endImageView.alpha = 1;
+}
+
 @end
 
 
@@ -85,9 +193,15 @@ static const CGFloat kTFBottomPadding   = 12;
 - (void)hideDefaultBackground {
     self.backgroundColor = [UIColor clearColor];
     self.barTintColor    = [UIColor clearColor];
-    self.translucent     = YES;
     self.shadowImage     = [UIImage new];
     [self setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
+}
+
+- (void)showDefaultBackground {
+    self.backgroundColor = nil;
+    self.barTintColor    = nil;
+    self.shadowImage     = nil;
+    [self setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
 }
 
 - (void)setBackgroundView_:(UIView *)view {

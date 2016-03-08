@@ -16,6 +16,7 @@
 #import "MirrorKit.h"
 #import "TBAlertController.h"
 #import <EXTScope.h>
+#import "Objc-iOS-Extensions.h"
 
 #import "TBTimer.h"
 

@@ -14,6 +14,8 @@
 
 + (instancetype)backgroundForBar:(UINavigationBar *)bar;
 
+@property (nonatomic) BOOL shrunken;
+
 @property (nonatomic, readonly) ERAddressTextField *startTextField;
 @property (nonatomic, readonly) ERAddressTextField *endTextField;
 
@@ -23,4 +25,5 @@
 @interface UINavigationBar (BarBackground)
 - (void)hideDefaultBackground;
 - (void)setBackgroundView_:(UIView *)view;
+- (void)showDefaultBackground;
 @end

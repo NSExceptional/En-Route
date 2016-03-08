@@ -19,7 +19,6 @@
 		B49A2C7D1C72BCBC000752EF /* TBTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C7B1C72BCBC000752EF /* TBTimer.m */; };
 		B49A2C841C72BCC2000752EF /* MKPlacemark+MKPointAnnotation.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C7F1C72BCC2000752EF /* MKPlacemark+MKPointAnnotation.m */; };
 		B49A2C851C72BCC2000752EF /* NSIndexPath+Util.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C811C72BCC2000752EF /* NSIndexPath+Util.m */; };
-		B49A2C861C72BCC2000752EF /* UIImage+Util.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C831C72BCC2000752EF /* UIImage+Util.m */; };
 		B49A2C8F1C72BCCA000752EF /* ERListActivityCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C881C72BCCA000752EF /* ERListActivityCell.m */; };
 		B49A2C901C72BCCA000752EF /* ERListItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C8A1C72BCCA000752EF /* ERListItemCell.m */; };
 		B49A2C911C72BCCA000752EF /* ERListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C8C1C72BCCA000752EF /* ERListViewController.m */; };
@@ -57,8 +56,6 @@
 		B49A2C7F1C72BCC2000752EF /* MKPlacemark+MKPointAnnotation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MKPlacemark+MKPointAnnotation.m"; sourceTree = "<group>"; };
 		B49A2C801C72BCC2000752EF /* NSIndexPath+Util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSIndexPath+Util.h"; sourceTree = "<group>"; };
 		B49A2C811C72BCC2000752EF /* NSIndexPath+Util.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSIndexPath+Util.m"; sourceTree = "<group>"; };
-		B49A2C821C72BCC2000752EF /* UIImage+Util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+Util.h"; sourceTree = "<group>"; };
-		B49A2C831C72BCC2000752EF /* UIImage+Util.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+Util.m"; sourceTree = "<group>"; };
 		B49A2C871C72BCCA000752EF /* ERListActivityCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERListActivityCell.h; sourceTree = "<group>"; };
 		B49A2C881C72BCCA000752EF /* ERListActivityCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERListActivityCell.m; sourceTree = "<group>"; };
 		B49A2C891C72BCCA000752EF /* ERListItemCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERListItemCell.h; sourceTree = "<group>"; };
@@ -187,8 +184,6 @@
 				B49A2C7F1C72BCC2000752EF /* MKPlacemark+MKPointAnnotation.m */,
 				B49A2C801C72BCC2000752EF /* NSIndexPath+Util.h */,
 				B49A2C811C72BCC2000752EF /* NSIndexPath+Util.m */,
-				B49A2C821C72BCC2000752EF /* UIImage+Util.h */,
-				B49A2C831C72BCC2000752EF /* UIImage+Util.m */,
 				B427A9851C8D1D5500018884 /* NSString+TemporaryFile.h */,
 				B427A9861C8D1D5500018884 /* NSString+TemporaryFile.m */,
 				B427A9881C8D22C400018884 /* MKMapItem+PostalAddress.h */,
@@ -346,7 +341,6 @@
 				B4E3474D1C767489005597E4 /* ERMapNavigationBarBackground.m in Sources */,
 				B49A2CA61C72C06E000752EF /* En-Route-Constants.m in Sources */,
 				B49A2CA11C72BCD0000752EF /* ERMapViewController.m in Sources */,
-				B49A2C861C72BCC2000752EF /* UIImage+Util.m in Sources */,
 				B427A98D1C8D2AB500018884 /* ERMapItemActivityProvider.m in Sources */,
 				B49A2C9F1C72BCD0000752EF /* ERCalloutView.m in Sources */,
 				B49A2C7D1C72BCBC000752EF /* TBTimer.m in Sources */,

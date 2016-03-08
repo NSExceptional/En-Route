@@ -170,6 +170,8 @@ static BOOL trackUserInitially = YES;
 }
 
 - (void)beginRouting {
+    [self removeRoutesFromView];
+    
     [self.barBackground.startTextField resignFirstResponder];
     [self.barBackground.endTextField resignFirstResponder];
     
@@ -445,9 +447,22 @@ static BOOL trackUserInitially = YES;
     self.navigationItem.rightBarButtonItem = nil;
 }
 
+- (void)removeRoutesFromView {
+    [self setupInitialBarButtonItems];
+    [self dismissPickerView];
+    
+    [self.mapView removeOverlays:self.mapView.overlays];
+    [self.renderers removeAllObjects];
+    self.toolbarLabel.text = nil;
+    
+    self.routes              = nil;
+    self.selectedRoute       = nil;
+    self.selectedRouteIndex  = 0;
+    self.selectedCell        = nil;
+}
+
 - (void)resetMapView {
-    [_pickerController.tableView removeFromSuperview];
-    _pickerController = nil;
+    [self dismissPickerView];
     
     // Remove overlays, clear fields
     [self.mapView removeOverlays:self.mapView.overlays];
@@ -475,17 +490,15 @@ static BOOL trackUserInitially = YES;
     [self resetMapData];
     [self updateMapButtons];
     
-    self.barBackground.startTextField.userInteractionEnabled = YES;
-    self.barBackground.endTextField.userInteractionEnabled = YES;
+    self.barBackground.shrunken = NO;
 }
 
 - (void)prepareForSearchState {
     [self setupSearchBarButtonItems];
     
-    self.toolbarLabel.text = nil;
+    self.barBackground.shrunken = NO;
     
-    self.barBackground.startTextField.userInteractionEnabled = NO;
-    self.barBackground.endTextField.userInteractionEnabled = NO;
+    self.toolbarLabel.text = nil;
     
     _pickerController = [TBTableViewController new];
     _pickerController.defaultCanSelectRow = YES;
@@ -522,26 +535,49 @@ static BOOL trackUserInitially = YES;
     y                  += pxheight;
     CGFloat width      = CGRectGetWidth(self.view.frame);
     _pickerController.tableView.frame = CGRectMake(0, y, width, contentSize.height);
-    [self.view addSubview:_pickerController.tableView];
+    
     UIView *hairline = ({
         UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, pxheight)];
         view.backgroundColor = [UIColor colorWithWhite:0.000 alpha:0.200];
         view;
     });
     [_pickerController.tableView addSubview:hairline];
+    
+    [self presentPickerView];
 }
 
 - (void)prepareForResultsState {
     [self setupResultsBarButtonItems];
-    [_pickerController.tableView removeFromSuperview];
-    _pickerController = nil;
+    [self dismissPickerView];
+    
+    self.barBackground.shrunken = YES;
     
     // Remove unselected overlays
     for (id<MKOverlay> overlay in self.mapView.overlays)
         if (overlay != self.selectedRoute.polyline)
             [self.mapView removeOverlay:overlay];
+}
+
+- (void)presentPickerView {
+    CGFloat y = _pickerController.tableView.frame.origin.y;
+    [_pickerController.tableView setFrameY:CGRectGetHeight(self.view.frame)];
     
+    [self.view addSubview:_pickerController.tableView];
     
+    [UIView animateWithDuration:.5 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
+        [_pickerController.tableView setFrameY:y];
+    } completion:nil];
+}
+
+- (void)dismissPickerView {
+    _pickerController.tableView.userInteractionEnabled = NO;
+    
+    [UIView animateWithDuration:.5 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
+        [_pickerController.tableView setFrameY:CGRectGetHeight(self.view.frame)];
+    } completion:^(BOOL finished) {
+        [_pickerController.tableView removeFromSuperview];
+        _pickerController = nil;
+    }];
 }
 
 #pragma mark - CLLocationManagerDelegate, MKMapViewDelegate
@@ -690,7 +726,6 @@ static BOOL trackUserInitially = YES;
     } else {
         // Only resign responder if text length
         if (textField.text.length) {
-            [textField resignFirstResponder];
             [self beginRouting];
         }
     }
@@ -703,6 +738,8 @@ static BOOL trackUserInitially = YES;
 }
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField {
+    [self removeRoutesFromView];
+    
     [self.searchQueue cancelRequests];
     [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
     self.loadingResults = NO;

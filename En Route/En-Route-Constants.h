@@ -10,17 +10,3 @@
 
 
 extern NSString * const kCurrentLocationText;
-
-
-NS_INLINE CGRect CGRectInsetLeft(CGRect r, CGFloat dx, CGFloat dy) {
-    r.origin.x += dx;
-    r.size.width -= dx;
-    r.origin.y += dy;
-    r.size.height -= dy;
-    
-    if (r.size.width < 0 || r.size.height < 0) {
-        return CGRectNull;
-    }
-    
-    return r;
-}
