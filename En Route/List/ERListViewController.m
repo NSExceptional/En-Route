@@ -223,29 +223,11 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
 #pragma mark - Row expansion
 
 - (void)expandRow:(NSInteger)row {
-    NSIndexPath *ip = [NSIndexPath indexPathForItem:row inSection:0];
-    
-    // Reload to fade separator inset from expanded row
-//    [self.tableView reloadRowsAtIndexPaths:@[ip] withRowAnimation:UITableViewRowAnimationNone];
     NSArray *toInsert = [NSIndexPath indexPathsInSection:0 inRange:NSMakeRange(row+1, self.availableOptions)];
     [self.tableView insertRowsAtIndexPaths:toInsert withRowAnimation:UITableViewRowAnimationFade];
 }
 
 - (void)collapseRow:(NSInteger)row {
-    NSIndexPath *ip = [NSIndexPath indexPathForItem:row inSection:0];
-    
-    // Reload to fade out separator inset on previously expanded row
-//    [self.tableView reloadRowsAtIndexPaths:@[ip] withRowAnimation:UITableViewRowAnimationNone];
-    NSArray *toDelete = [NSIndexPath indexPathsInSection:0 inRange:NSMakeRange(row+1, self.availableOptions)];
-    [self.tableView deleteRowsAtIndexPaths:toDelete withRowAnimation:UITableViewRowAnimationFade];
-}
-
-- (void)expandRowNoRefresh:(NSInteger)row {
-    NSArray *toInsert = [NSIndexPath indexPathsInSection:0 inRange:NSMakeRange(row+1, self.availableOptions)];
-    [self.tableView insertRowsAtIndexPaths:toInsert withRowAnimation:UITableViewRowAnimationFade];
-}
-
-- (void)collapseRowNoRefresh:(NSInteger)row {
     NSArray *toDelete = [NSIndexPath indexPathsInSection:0 inRange:NSMakeRange(row+1, self.availableOptions)];
     [self.tableView deleteRowsAtIndexPaths:toDelete withRowAnimation:UITableViewRowAnimationFade];
 }

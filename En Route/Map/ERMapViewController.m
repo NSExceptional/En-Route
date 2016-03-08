@@ -63,7 +63,7 @@ static BOOL trackUserInitially = YES;
     
     // Navigation bar background view
     _barBackground = [ERMapNavigationBarBackground backgroundForBar:self.navigationController.navigationBar];
-//    [self.navigationController.navigationBar setBackgroundView_:_barBackground];
+    //    [self.navigationController.navigationBar setBackgroundView_:_barBackground];
     [self.navigationController.navigationBar hideDefaultBackground];
     [self.view addSubview:_barBackground];
     _barBackground.startTextField.delegate = self;
@@ -161,10 +161,12 @@ static BOOL trackUserInitially = YES;
 }
 
 - (void)showList {
-    UITableViewController *list = [ERListViewController listItems:self.POIs.allObjects currentLocation:[self.userLocation valueForKey:@"location"]];
-    UIViewController *nav = [[UINavigationController alloc] initWithRootViewController:list];
-    nav.modalPresentationStyle = UIModalPresentationOverCurrentContext;
-    [self presentViewController:nav animated:YES completion:nil];
+    [self getStartPlacemark:^(MKPlacemark *start) {
+        UITableViewController *list = [ERListViewController listItems:self.POIs.allObjects currentLocation:start.location];
+        UIViewController *nav = [[UINavigationController alloc] initWithRootViewController:list];
+        nav.modalPresentationStyle = UIModalPresentationOverCurrentContext;
+        [self presentViewController:nav animated:YES completion:nil];
+    }];
 }
 
 - (void)beginRouting {
