@@ -11,6 +11,7 @@
 		B427A9871C8D1D5500018884 /* NSString+TemporaryFile.m in Sources */ = {isa = PBXBuildFile; fileRef = B427A9861C8D1D5500018884 /* NSString+TemporaryFile.m */; };
 		B427A98A1C8D22C400018884 /* MKMapItem+PostalAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = B427A9891C8D22C400018884 /* MKMapItem+PostalAddress.m */; };
 		B427A98D1C8D2AB500018884 /* ERMapItemActivityProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = B427A98C1C8D2AB500018884 /* ERMapItemActivityProvider.m */; };
+		B44643321C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m in Sources */ = {isa = PBXBuildFile; fileRef = B44643311C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m */; };
 		B468D8BB1C49C33400AFC6A7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8BA1C49C33400AFC6A7 /* main.m */; };
 		B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8BD1C49C33400AFC6A7 /* ERAppDelegate.m */; };
 		B468D8C61C49C33400AFC6A7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B468D8C51C49C33400AFC6A7 /* Assets.xcassets */; };
@@ -41,6 +42,8 @@
 		B427A9891C8D22C400018884 /* MKMapItem+PostalAddress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MKMapItem+PostalAddress.m"; sourceTree = "<group>"; };
 		B427A98B1C8D2AB500018884 /* ERMapItemActivityProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERMapItemActivityProvider.h; sourceTree = "<group>"; };
 		B427A98C1C8D2AB500018884 /* ERMapItemActivityProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERMapItemActivityProvider.m; sourceTree = "<group>"; };
+		B44643301C90F312009514E6 /* MKUserTrackingBarButtonItem+State.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MKUserTrackingBarButtonItem+State.h"; sourceTree = "<group>"; };
+		B44643311C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MKUserTrackingBarButtonItem+State.m"; sourceTree = "<group>"; };
 		B468D8B61C49C33400AFC6A7 /* En Route.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "En Route.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B468D8BA1C49C33400AFC6A7 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		B468D8BC1C49C33400AFC6A7 /* ERAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ERAppDelegate.h; sourceTree = "<group>"; };
@@ -188,6 +191,8 @@
 				B427A9861C8D1D5500018884 /* NSString+TemporaryFile.m */,
 				B427A9881C8D22C400018884 /* MKMapItem+PostalAddress.h */,
 				B427A9891C8D22C400018884 /* MKMapItem+PostalAddress.m */,
+				B44643301C90F312009514E6 /* MKUserTrackingBarButtonItem+State.h */,
+				B44643311C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -340,6 +345,7 @@
 				B49A2C851C72BCC2000752EF /* NSIndexPath+Util.m in Sources */,
 				B4E3474D1C767489005597E4 /* ERMapNavigationBarBackground.m in Sources */,
 				B49A2CA61C72C06E000752EF /* En-Route-Constants.m in Sources */,
+				B44643321C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m in Sources */,
 				B49A2CA11C72BCD0000752EF /* ERMapViewController.m in Sources */,
 				B427A98D1C8D2AB500018884 /* ERMapItemActivityProvider.m in Sources */,
 				B49A2C9F1C72BCD0000752EF /* ERCalloutView.m in Sources */,

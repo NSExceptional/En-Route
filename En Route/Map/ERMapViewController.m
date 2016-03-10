@@ -26,6 +26,7 @@ static BOOL trackUserInitially = YES;
 @property (nonatomic, readonly) UIBarButtonItem *routeButton;
 @property (nonatomic, readonly) UIBarButtonItem *searchButton;
 @property (nonatomic, readonly) UIBarButtonItem *listButton;
+@property (nonatomic, readonly) MKUserTrackingBarButtonItem *userTrackingButton;
 @property (nonatomic, readonly) UILabel *toolbarLabel;
 
 @property (nonatomic          ) NSMutableSet *POIs;
@@ -34,6 +35,7 @@ static BOOL trackUserInitially = YES;
 @property (nonatomic, readonly) NSArray      *latestAnnotations;
 
 @property (nonatomic, readonly) BOOL             hideButtons;
+@property (nonatomic, readonly) BOOL             currentLocationIsPartOfRoute;
 @property (nonatomic          ) MKAnnotationView *userLocationView;
 @property (nonatomic, readonly) MKUserLocation   *userLocation;
 @property (nonatomic          ) MKAnnotationView *droppedPin;
@@ -96,11 +98,11 @@ static BOOL trackUserInitially = YES;
     self.locationManager.delegate = self;
     
     // Toolbar items
-    MKUserTrackingBarButtonItem *userTrackingButton = [[MKUserTrackingBarButtonItem alloc] initWithMapView:self.mapView];
+    _userTrackingButton = [[MKUserTrackingBarButtonItem alloc] initWithMapView:self.mapView];
     _listButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(showList)];
     UIBarButtonItem *spacer = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     UIBarButtonItem *label = [[UIBarButtonItem alloc] initWithCustomView:_toolbarLabel];
-    self.toolbarItems = @[userTrackingButton, spacer, label, spacer, _listButton];
+    self.toolbarItems = @[_userTrackingButton, spacer, label, spacer, _listButton];
     
     // Hide keyboard on tap
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self.barBackground.startTextField action:@selector(resignFirstResponder)];
@@ -155,6 +157,8 @@ static BOOL trackUserInitially = YES;
 #pragma mark - Actions
 
 - (void)clearButtonPressed {
+    [self.mapView setUserTrackingMode:MKUserTrackingModeNone animated:YES];
+    
     [self prepareForDefaultState];
     [self.barBackground.startTextField resignFirstResponder];
     [self.barBackground.endTextField resignFirstResponder];
@@ -377,6 +381,10 @@ static BOOL trackUserInitially = YES;
 
 - (BOOL)hideButtons {
     return _barBackground.startTextField.text.length > 0 && _barBackground.endTextField.text.length > 0;
+}
+
+- (BOOL)currentLocationIsPartOfRoute {
+    return [self.barBackground.startTextField.text isEqualToString:kCurrentLocationText] || [self.barBackground.endTextField.text isEqualToString:kCurrentLocationText];
 }
 
 - (void)updateNavigationItems {
@@ -605,19 +613,26 @@ static BOOL trackUserInitially = YES;
 }
 
 - (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
+    if (self.currentLocationIsPartOfRoute || !self.userTrackingButton.located) {
+        return;
+    }
+    
     if (!self.barBackground.startTextField.text.length) {
         self.barBackground.startTextField.text = kCurrentLocationText;
     } else if (!self.barBackground.endTextField.text.length) {
         self.barBackground.endTextField.text = kCurrentLocationText;
     }
+    
+    [self updateMapButtons];
+    
     //     Demo code
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            self.barBackground.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
-            [self beginRouting];
-        });
-    });
+    //    static dispatch_once_t onceToken;
+    //    dispatch_once(&onceToken, ^{
+    //        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    //            self.barBackground.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
+    //            [self beginRouting];
+    //        });
+    //    });
 }
 
 // Left this in this class because putting it in ERMapView caused the drop animation to disappear
@@ -628,7 +643,7 @@ static BOOL trackUserInitially = YES;
         self.userLocationView = user;
         
         // Hide buttons if both fields are full
-        if (!self.hideButtons) {
+        if (!self.hideButtons && !self.currentLocationIsPartOfRoute) {
             ERCalloutView *calloutView       = [ERCalloutView viewForAnnotation:user];
             calloutView.buttonTitleYOffset   += 5;
             calloutView.useDestinationButton = self.barBackground.startTextField.text.length > 0;

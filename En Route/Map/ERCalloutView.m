@@ -9,6 +9,10 @@
 #import "ERCalloutView.h"
 
 
+static CGFloat dx = 5;
+static CGFloat dy = 10;
+static CGFloat kCalloutWidth = 52;
+
 @interface ERCalloutView ()
 @property (nonatomic) UIButton *button;
 @end
@@ -16,7 +20,7 @@
 @implementation ERCalloutView
 
 + (instancetype)viewForAnnotation:(MKAnnotationView *)pin {
-    return [[self alloc] initWithFrame:CGRectMake(0, 0, 52, CGRectGetHeight(pin.frame)+10)];
+    return [[self alloc] initWithFrame:CGRectMake(-dx, -dy, kCalloutWidth + dx, CGRectGetHeight(pin.frame)+dy)];
 }
 
 - (id)initWithFrame:(CGRect)frame {
@@ -25,7 +29,7 @@
     if (self) {
         self.tintColor          = [UIColor whiteColor];
         _button                 = [UIButton buttonWithType:UIButtonTypeSystem];
-        _button.frame           = CGRectMake(0, 0, 52, CGRectGetHeight(frame));
+        _button.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
         _button.backgroundColor = [UIColor colorWithRed:0.600 green:0.000 blue:1.000 alpha:1.000];
         [_button setTitle:@"Start" forState:UIControlStateNormal];
         
@@ -43,6 +47,11 @@
     return self;
 }
 
+- (void)setFrame:(CGRect)frame {
+    super.frame   = frame;
+    _button.frame = frame;
+}
+
 - (void)setUseDestinationButton:(BOOL)useDestinationButton {
     _useDestinationButton = useDestinationButton;
     
@@ -58,6 +67,16 @@
 - (void)setButtonTitleYOffset:(CGFloat)buttonTitleYOffset {
     _buttonTitleYOffset = buttonTitleYOffset;
     _button.titleEdgeInsets = UIEdgeInsetsMake(0, 0, _buttonTitleYOffset, 0);
+}
+
+- (void)didMoveToSuperview {
+    [super didMoveToSuperview];
+    
+    // Fix weird alignment of callout views on 6s+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        self.superview.backgroundColor = self.button.backgroundColor;
+        self.superview.clipsToBounds = NO;
+    });
 }
 
 #pragma mark - Colors

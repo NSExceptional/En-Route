@@ -21,6 +21,7 @@
 #import "TBTimer.h"
 
 #import "NSString+TemporaryFile.h"
+#import "MKUserTrackingBarButtonItem+State.h"
 
 
 #pragma mark - Macros
