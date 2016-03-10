@@ -12,6 +12,8 @@
 		B427A98A1C8D22C400018884 /* MKMapItem+PostalAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = B427A9891C8D22C400018884 /* MKMapItem+PostalAddress.m */; };
 		B427A98D1C8D2AB500018884 /* ERMapItemActivityProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = B427A98C1C8D2AB500018884 /* ERMapItemActivityProvider.m */; };
 		B44643321C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m in Sources */ = {isa = PBXBuildFile; fileRef = B44643311C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m */; };
+		B44643351C912BFD009514E6 /* ERSuggestionsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B44643341C912BFD009514E6 /* ERSuggestionsViewController.m */; };
+		B44643381C91347F009514E6 /* ERSuggestionCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B44643371C91347F009514E6 /* ERSuggestionCell.m */; };
 		B468D8BB1C49C33400AFC6A7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8BA1C49C33400AFC6A7 /* main.m */; };
 		B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8BD1C49C33400AFC6A7 /* ERAppDelegate.m */; };
 		B468D8C61C49C33400AFC6A7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B468D8C51C49C33400AFC6A7 /* Assets.xcassets */; };
@@ -44,6 +46,10 @@
 		B427A98C1C8D2AB500018884 /* ERMapItemActivityProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERMapItemActivityProvider.m; sourceTree = "<group>"; };
 		B44643301C90F312009514E6 /* MKUserTrackingBarButtonItem+State.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MKUserTrackingBarButtonItem+State.h"; sourceTree = "<group>"; };
 		B44643311C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MKUserTrackingBarButtonItem+State.m"; sourceTree = "<group>"; };
+		B44643331C912BFD009514E6 /* ERSuggestionsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERSuggestionsViewController.h; sourceTree = "<group>"; };
+		B44643341C912BFD009514E6 /* ERSuggestionsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERSuggestionsViewController.m; sourceTree = "<group>"; };
+		B44643361C91347F009514E6 /* ERSuggestionCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERSuggestionCell.h; sourceTree = "<group>"; };
+		B44643371C91347F009514E6 /* ERSuggestionCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERSuggestionCell.m; sourceTree = "<group>"; };
 		B468D8B61C49C33400AFC6A7 /* En Route.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "En Route.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B468D8BA1C49C33400AFC6A7 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		B468D8BC1C49C33400AFC6A7 /* ERAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ERAppDelegate.h; sourceTree = "<group>"; };
@@ -174,6 +180,10 @@
 				B49A2C951C72BCD0000752EF /* ERAddressTextField.m */,
 				B49A2C961C72BCD0000752EF /* ERCalloutView.h */,
 				B49A2C971C72BCD0000752EF /* ERCalloutView.m */,
+				B44643331C912BFD009514E6 /* ERSuggestionsViewController.h */,
+				B44643341C912BFD009514E6 /* ERSuggestionsViewController.m */,
+				B44643361C91347F009514E6 /* ERSuggestionCell.h */,
+				B44643371C91347F009514E6 /* ERSuggestionCell.m */,
 				B49A2C9C1C72BCD0000752EF /* TBTableViewController.h */,
 				B49A2C9D1C72BCD0000752EF /* TBTableViewController.m */,
 			);
@@ -341,7 +351,9 @@
 				B49A2C901C72BCCA000752EF /* ERListItemCell.m in Sources */,
 				B468D8BB1C49C33400AFC6A7 /* main.m in Sources */,
 				B49A2C841C72BCC2000752EF /* MKPlacemark+MKPointAnnotation.m in Sources */,
+				B44643351C912BFD009514E6 /* ERSuggestionsViewController.m in Sources */,
 				B49A2CA01C72BCD0000752EF /* ERMapView.m in Sources */,
+				B44643381C91347F009514E6 /* ERSuggestionCell.m in Sources */,
 				B49A2C851C72BCC2000752EF /* NSIndexPath+Util.m in Sources */,
 				B4E3474D1C767489005597E4 /* ERMapNavigationBarBackground.m in Sources */,
 				B49A2CA61C72C06E000752EF /* En-Route-Constants.m in Sources */,
