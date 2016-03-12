@@ -13,7 +13,7 @@
 @property (nonatomic, readonly) UILabel *nameLabel;
 @property (nonatomic, readonly) UILabel *addressLabel;
 
-@property (nonatomic, readonly) UIImageView *iconImageView;
+- (void)setIcon:(UIImage *)icon;
 
 + (UIColor *)secondaryColor;
 

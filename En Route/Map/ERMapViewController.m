@@ -10,34 +10,29 @@
 #import "ERCalloutView.h"
 #import "ERMapNavigationBarBackground.h"
 #import "ERLocalSearchQueue.h"
-#import "MKPlacemark+MKPointAnnotation.h"
 #import "ERListViewController.h"
 #import "TBTableViewController.h"
-
+#import "ERSuggestionsViewController.h"
+#import "ERSettingsViewController.h"
+#import "ERRoutesController.h"
 
 static BOOL trackUserInitially = YES;
 
-@interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate, UITextFieldDelegate>
+@interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate, UITextFieldDelegate, ERRoutesControllerDelegate>
 
 @property (nonatomic) CLLocationManager *locationManager;
-@property (nonatomic, readonly) ERMapNavigationBarBackground *barBackground;
+@property (nonatomic, readonly) ERRoutesController *routesController;
+@property (nonatomic, readonly) ERSuggestionsViewController *suggestions;
 
-@property (nonatomic, readonly) UIBarButtonItem *clearButton;
-@property (nonatomic, readonly) UIBarButtonItem *routeButton;
-@property (nonatomic, readonly) UIBarButtonItem *searchButton;
-@property (nonatomic, readonly) UIBarButtonItem *listButton;
-@property (nonatomic, readonly) MKUserTrackingBarButtonItem *userTrackingButton;
-@property (nonatomic, readonly) UILabel *toolbarLabel;
+@property (nonatomic) ERSettingsViewController *settings;
 
 @property (nonatomic          ) NSMutableSet *POIs;
 @property (nonatomic          ) NSMutableSet *latestPOIs;
 @property (nonatomic, readonly) NSArray      *annotations;
 @property (nonatomic, readonly) NSArray      *latestAnnotations;
 
-@property (nonatomic, readonly) BOOL             hideButtons;
-@property (nonatomic, readonly) BOOL             currentLocationIsPartOfRoute;
 @property (nonatomic          ) MKAnnotationView *userLocationView;
-@property (nonatomic, readonly) MKUserLocation   *userLocation;
+@property (nonatomic, readonly) CLLocation       *userLocation;
 @property (nonatomic          ) MKAnnotationView *droppedPin;
 
 @property (nonatomic) BOOL                  loadingResults;
@@ -54,29 +49,26 @@ static BOOL trackUserInitially = YES;
 
 @implementation ERMapViewController
 
-
 - (void)loadView {
-    // Create MapView
     [super loadView];
-    _mapView  = [[ERMapView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    
+    // Create MapView
+    _mapView = [[ERMapView alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [self.view addSubview:_mapView];
     self.mapView.delegate = self;
-    //    [self.mapView.panningGestureRecognizer addTarget:self action:@selector(updateOverlays)];
     
     // Navigation bar background view
-    _barBackground = [ERMapNavigationBarBackground backgroundForBar:self.navigationController.navigationBar];
-    //    [self.navigationController.navigationBar setBackgroundView_:_barBackground];
     [self.navigationController.navigationBar hideDefaultBackground];
-    [self.view addSubview:_barBackground];
-    _barBackground.startTextField.delegate = self;
-    _barBackground.endTextField.delegate   = self;
+    self.navigationController.toolbarHidden = NO;
     
-    // Toolbar label
-    _toolbarLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 1, 1)];
-    _toolbarLabel.font = [UIFont systemFontOfSize:12];
+    // Routes controller
+    MKUserTrackingBarButtonItem *button = [[MKUserTrackingBarButtonItem alloc] initWithMapView:self.mapView];
+    _routesController = [ERRoutesController forNavigationItem:self.navigationItem toolbar:self.navigationController.toolbar trackingButton:button];
+    [self addChildViewController:self.routesController];
+    self.routesController.delegate = self;
     
     // Map rectangle
-    NSString *rekt = [[NSUserDefaults standardUserDefaults] valueForKey:@"MapRekt"];
+    NSString *rekt = [[NSUserDefaults standardUserDefaults] stringForKey:kPref_mapRect];
     if (rekt) {
         CGRect r = CGRectFromString(rekt);
         self.mapView.visibleMapRect = *((MKMapRect*)&r);
@@ -96,28 +88,6 @@ static BOOL trackUserInitially = YES;
     // Locaiton manager is used to get location permissions
     self.locationManager = [CLLocationManager new];
     self.locationManager.delegate = self;
-    
-    // Toolbar items
-    _userTrackingButton = [[MKUserTrackingBarButtonItem alloc] initWithMapView:self.mapView];
-    _listButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(showList)];
-    UIBarButtonItem *spacer = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    UIBarButtonItem *label = [[UIBarButtonItem alloc] initWithCustomView:_toolbarLabel];
-    self.toolbarItems = @[_userTrackingButton, spacer, label, spacer, _listButton];
-    
-    // Hide keyboard on tap
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self.barBackground.startTextField action:@selector(resignFirstResponder)];
-    [tap addTarget:self.barBackground.endTextField action:@selector(resignFirstResponder)];
-    [self.mapView addGestureRecognizer:tap];
-    
-    // Navbar items
-    _clearButton = [[UIBarButtonItem alloc] initWithTitle:@"Clear" style:UIBarButtonItemStylePlain target:self action:@selector(clearButtonPressed)];
-    _routeButton = [[UIBarButtonItem alloc] initWithTitle:@"Route" style:UIBarButtonItemStyleDone target:self action:@selector(beginRouting)];
-    _searchButton = [[UIBarButtonItem alloc] initWithTitle:@"Search" style:UIBarButtonItemStyleDone target:self action:@selector(searchRoute)];
-    self.navigationController.toolbarHidden = NO;
-    self.navigationItem.leftBarButtonItem   = _clearButton;
-    self.navigationItem.rightBarButtonItem  = _routeButton;
-    
-    [self updateNavigationItems];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -133,14 +103,13 @@ static BOOL trackUserInitially = YES;
                 [self.locationManager requestWhenInUseAuthorization];
             }];
             [locationRequest addOtherButtonWithTitle:@"Not right now" buttonAction:^(NSArray *textFieldStrings) {
-                [[NSUserDefaults standardUserDefaults] setObject:@1 forKey:@"location_days_since_last_request"];
+                [[NSUserDefaults standardUserDefaults] setObject:[NSDate date] forKey:kPref_locationNotRightNowDate];
             }];
             [locationRequest setCancelButtonWithTitle:@"No, don't ask me again" buttonAction:^(NSArray * _Nonnull textFieldStrings) {
-                [[NSUserDefaults standardUserDefaults] setObject:@YES forKey:@"location_dont_ask_again"];
+                [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kPref_locationDontAskAgain];
             }];
             
             [locationRequest showFromViewController:self];
-            
             
             break;
         }
@@ -154,102 +123,12 @@ static BOOL trackUserInitially = YES;
     
 }
 
-#pragma mark - Actions
-
-- (void)clearButtonPressed {
-    [self.mapView setUserTrackingMode:MKUserTrackingModeNone animated:YES];
-    
-    [self prepareForDefaultState];
-    [self.barBackground.startTextField resignFirstResponder];
-    [self.barBackground.endTextField resignFirstResponder];
+- (void)addChildViewController:(UIViewController *)childController {
+    [super addChildViewController:childController];
+    [self.view addSubview:childController.view];
 }
 
-- (void)showList {
-    [self getStartPlacemark:^(MKPlacemark *start) {
-        UITableViewController *list = [ERListViewController listItems:self.POIs.allObjects currentLocation:start.location];
-        UIViewController *nav = [[UINavigationController alloc] initWithRootViewController:list];
-        nav.modalPresentationStyle = UIModalPresentationOverCurrentContext;
-        [self presentViewController:nav animated:YES completion:nil];
-    }];
-}
-
-- (void)beginRouting {
-    [self removeRoutesFromView];
-    
-    [self.barBackground.startTextField resignFirstResponder];
-    [self.barBackground.endTextField resignFirstResponder];
-    
-    [self.mapView removeOverlays:self.mapView.overlays];
-    [self.mapView removeAnnotations:self.mapView.resultAnnotations];
-    [self.POIs removeAllObjects];
-    self.toolbarLabel.text = nil;
-    
-    [self updateMapButtons];
-    
-    [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
-    self.loadingResults = YES;
-    [self updateNavigationItems];
-    
-    [self getStartPlacemark:^(MKPlacemark *start) {
-        [self getEndPlacemark:^(MKPlacemark *end) {
-            [self showRoutesForStart:start end:end];
-        }];
-    }];
-}
-
-- (void)getStartPlacemark:(void(^)(MKPlacemark *start))callback {
-    if ([self.barBackground.startTextField.text isEqualToString:kCurrentLocationText]) {
-        NSParameterAssert(self.userLocation);
-        CLLocation *location = [self.userLocation valueForKey:@"location"];
-        callback([[MKPlacemark alloc] initWithCoordinate:location.coordinate addressDictionary:nil]);
-    } else {
-        [[CLGeocoder new] geocodeAddressString:self.barBackground.startTextField.text completionHandler:^(NSArray *placemark, NSError *error) {
-            if (placemark && placemark.count) {
-                MKPlacemark *start = [[MKPlacemark alloc] initWithPlacemark:placemark[0]];
-                callback(start);
-            } else {
-                [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not locate starting address"] showFromViewController:self];
-                [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-                self.loadingResults = NO;
-                [self updateNavigationItems];
-            }
-        }];
-    }
-}
-
-- (void)getEndPlacemark:(void(^)(MKPlacemark *end))callback {
-    if ([self.barBackground.endTextField.text isEqualToString:kCurrentLocationText]) {
-        callback([[MKPlacemark alloc] initWithCoordinate:[[self.userLocation valueForKey:@"location"] coordinate] addressDictionary:nil]);
-    } else {
-        [[CLGeocoder new] geocodeAddressString:self.barBackground.endTextField.text completionHandler:^(NSArray *placemark, NSError *error) {
-            if (placemark && placemark.count) {
-                MKPlacemark *end = [[MKPlacemark alloc] initWithPlacemark:placemark[0]];
-                callback(end);
-            } else {
-                [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not locate destination address"] showFromViewController:self];
-                [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-                self.loadingResults = NO;
-                [self updateNavigationItems];
-            }
-        }];
-    }
-}
-
-#pragma mark - Getters
-
-- (NSArray *)latestAnnotations {
-    return [[self.latestPOIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"] valueForKeyPath:@"@unionOfObjects.pointAnnotation"];
-}
-
-- (NSArray *)annotations {
-    return [[self.POIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"] valueForKeyPath:@"@unionOfObjects.pointAnnotation"];
-}
-
-- (MKUserLocation *)userLocation {
-    return (id)self.userLocationView.annotation;
-}
-
-#pragma mark - POI processing
+#pragma mark - Routing
 
 - (NSArray<CLLocation*> *)coordinatesAlongRoute:(MKRoute *)route {
     NSMutableArray *points = [NSMutableArray array];
@@ -258,31 +137,11 @@ static BOOL trackUserInitially = YES;
         [points addObject:[[CLLocation alloc] initWithLatitude:coord.latitude longitude:coord.longitude]];
     }
     
-    // Debugging
-    //    NSMutableArray *placemarks = [NSMutableArray new];
-    //    for (CLLocation *loc in points)
-    //        [placemarks addObject:[[MKPlacemark alloc] initWithCoordinate:loc.coordinate addressDictionary:nil]];
-    //    
-    //    [self.mapView addAnnotations:placemarks];
-    //    return @[];
     return points;
 }
 
 - (void)showRoutesForStart:(MKPlacemark *)start end:(MKPlacemark *)end {
-    MKMapItem *startLocation     = [[MKMapItem alloc] initWithPlacemark:start];
-    MKMapItem *endLocation       = [[MKMapItem alloc] initWithPlacemark:end];
-    
-    MKDirectionsRequest *request = [MKDirectionsRequest new];
-    request.source               = startLocation;
-    request.destination          = endLocation;
-    request.requestsAlternateRoutes = YES;
-    
-    self.toolbarLabel.text = @"Calculating routes…";
-    [self.toolbarLabel sizeToFit];
-    
-    MKDirections *directions     = [[MKDirections alloc] initWithRequest:request];
-    [directions calculateDirectionsWithCompletionHandler:^(MKDirectionsResponse *response, NSError *error) {
-        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+    [MKDirectionsRequest getDirectionsFrom:start to:end completion:^(MKDirectionsResponse * _Nullable response, NSError * _Nullable error) {
         self.loadingResults = NO;
         
         if (!error && response.routes.count) {
@@ -294,16 +153,18 @@ static BOOL trackUserInitially = YES;
             [self showRoutePicker:response.routes];
         } else {
             [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not get directions"] showFromViewController:self];
-            [self updateNavigationItems];
-            self.toolbarLabel.text = nil;
+            self.routesController.state = ERSystemStateDefault;
+            [self.routesController setToolbarText:nil];
         }
     }];
 }
 
 - (void)showRoutePicker:(NSArray *)routes {
+    self.routesController.state = ERSystemStateRoutePicker;
     self.routes = routes;
     self.selectedRoute = routes.firstObject;
-    [self prepareForSearchState];
+    [self setupRoutePickerView];
+    [self presentPickerView];
 }
 
 - (void)setSelectedRoute:(MKRoute *)selectedRoute {
@@ -322,146 +183,179 @@ static BOOL trackUserInitially = YES;
     }
 }
 
-- (void)searchRoute {
-    [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
-    self.loadingResults = YES;
-    [self prepareForResultsState];
-    [self updateNavigationItems];
-    
-    // Init queue
-    @weakify(self);
-    self.searchQueue = self.searchQueue ?: [ERLocalSearchQueue queueWithQuery:@"food" radius:1000];
-    // Pause callback
-    self.searchQueue.pauseCallback = ^(NSInteger secondsLeft) { @strongify(self)
-        //NSString *message = [NSString stringWithFormat:@"En Route is limited in the number of requests it can make in a minute. Please wait for %@ seconds.", @(secondsLeft)];
-        //[[TBAlertController simpleOKAlertWithTitle:@"Rate limiting" message:message] showFromViewController:self];
-        self.toolbarLabel.text = [NSString stringWithFormat:@"Waiting for %@ seconds…", @(secondsLeft)];
-        [self.toolbarLabel sizeToFit];
-    };
-    // Resume callback
-    self.searchQueue.resumeCallback = ^{ @strongify(self)
-        self.toolbarLabel.text = [NSString stringWithFormat:@"Fetching results… %@ so far…", @(self.POIs.count)];
-        [self.toolbarLabel sizeToFit];
-    };
-    // Error callback
-    self.searchQueue.errorCallback = ^{ @strongify(self)
-        self.toolbarLabel.text = [NSString stringWithFormat:@"Error, stopped early. Found %@ restaurants.", @(self.POIs.count)];
-        [self.toolbarLabel sizeToFit];
-    };
-    // Debug callback
-    self.searchQueue.debugCallback = ^(NSInteger count) { @strongify(self)
-        self.toolbarLabel.text = [NSString stringWithFormat:@"Fetching %@ results… ", @(count)];
-        [self.toolbarLabel sizeToFit];
-    };
-    
-    [self.searchQueue searchRoutes:@[self.selectedRoute] repeatedCallback:^(NSArray *mapItems) {
-        // Update map, order is important
-        [self.latestPOIs setSet:[NSSet setWithArray:mapItems]];
-        [self.latestPOIs minusSet:self.POIs];
-        [self.POIs addObjectsFromArray:mapItems];
-        [self.mapView addAnnotations:self.latestAnnotations];
+- (void)getStartPlacemark:(void(^)(MKPlacemark *start))callback {
+    if ([self.routesController.start.text isEqualToString:kCurrentLocationText]) {
+        NSParameterAssert(self.userLocation);
+        callback([[MKPlacemark alloc] initWithCoordinate:self.userLocation.coordinate addressDictionary:nil]);
+    } else {
+        [[CLGeocoder new] geocodeAddressString:self.routesController.start.text completionHandler:^(NSArray *placemark, NSError *error) {
+            if (placemark && placemark.count) {
+                MKPlacemark *start = [[MKPlacemark alloc] initWithPlacemark:placemark[0]];
+                callback(start);
+            } else {
+                [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not locate starting address"] showFromViewController:self];
+                self.loadingResults = NO;
+                self.routesController.state = ERSystemStateDefault;
+            }
+        }];
+    }
+}
+
+- (void)getEndPlacemark:(void(^)(MKPlacemark *end))callback {
+    if ([self.routesController.dest.text isEqualToString:kCurrentLocationText]) {
+        callback([[MKPlacemark alloc] initWithCoordinate:[[self.userLocation valueForKey:@"location"] coordinate] addressDictionary:nil]);
+    } else {
+        [[CLGeocoder new] geocodeAddressString:self.routesController.dest.text completionHandler:^(NSArray *placemark, NSError *error) {
+            if (placemark && placemark.count) {
+                MKPlacemark *end = [[MKPlacemark alloc] initWithPlacemark:placemark[0]];
+                callback(end);
+            } else {
+                [[TBAlertController simpleOKAlertWithTitle:@"Oops" message:@"Could not locate destination address"] showFromViewController:self];
+                self.loadingResults = NO;
+                self.routesController.state = ERSystemStateDefault;
+            }
+        }];
+    }
+}
+
+#pragma mark - Properties
+
+- (NSArray *)latestAnnotations {
+    return [[self.latestPOIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"] valueForKeyPath:@"@unionOfObjects.pointAnnotation"];
+}
+
+- (NSArray *)annotations {
+    return [[self.POIs.allObjects valueForKeyPath:@"@unionOfObjects.placemark"] valueForKeyPath:@"@unionOfObjects.pointAnnotation"];
+}
+
+- (CLLocation *)userLocation {
+    return (id)[self.userLocationView valueForKey:@"lastLocation"];
+}
+
+- (ERLocalSearchQueue *)searchQueue {
+    if (!_searchQueue) {
+        NSString *query = [[NSUserDefaults standardUserDefaults] stringForKey:kPref_searchQuery];
+        CGFloat radius = [[NSUserDefaults standardUserDefaults] doubleForKey:kPref_searchRadius];
         
-        // Update message and list button state
-        self.toolbarLabel.text = [NSString stringWithFormat:@"Fetching results… %@ so far…", @(self.POIs.count)];
-        [self.toolbarLabel sizeToFit];
-        self.listButton.enabled = self.POIs.count > 0;
-    } completion:^{
-        // Remove queue, cleanup
-        self.searchQueue = nil;
-        [self.latestPOIs removeAllObjects];
-        self.loadingResults = NO;
-        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-        [self updateNavigationItems];
-        
-        // Final message
-        self.toolbarLabel.text = [NSString stringWithFormat:@"%@ restaurants along your route", @(self.POIs.count)];
-        [self.toolbarLabel sizeToFit];
-    }];
-}
-
-- (BOOL)hideButtons {
-    return _barBackground.startTextField.text.length > 0 && _barBackground.endTextField.text.length > 0;
-}
-
-- (BOOL)currentLocationIsPartOfRoute {
-    return [self.barBackground.startTextField.text isEqualToString:kCurrentLocationText] || [self.barBackground.endTextField.text isEqualToString:kCurrentLocationText];
-}
-
-- (void)updateNavigationItems {
-    // Clear enabled if any text, Go enabled if both text
-    self.clearButton.enabled  = !self.loadingResults && (_barBackground.startTextField.text.length || _barBackground.endTextField.text.length);
-    self.routeButton.enabled = !self.loadingResults && self.hideButtons;
-    self.listButton.enabled = self.POIs.count > 0;
-}
-
-- (void)updateMapButtons {
-    [self updateNavigationItems];
+        @weakify(self);
+        _searchQueue = [ERLocalSearchQueue queueWithQuery:query radius:radius];
+        // Pause callback
+        _searchQueue.pauseCallback = ^(NSInteger secondsLeft) { @strongify(self)
+            //NSString *message = [NSString stringWithFormat:@"En Route is limited in the number of requests it can make in a minute. Please wait for %@ seconds.", @(secondsLeft)];
+            //[[TBAlertController simpleOKAlertWithTitle:@"Rate limiting" message:message] showFromViewController:self];
+            [self.routesController setToolbarText:[NSString stringWithFormat:@"Waiting for %@ seconds…", @(secondsLeft)]];
+        };
+        // Resume callback
+        _searchQueue.resumeCallback = ^{ @strongify(self)
+            [self.routesController setToolbarText:[NSString stringWithFormat:@"Fetching results… %@ so far…", @(self.POIs.count)]];
+        };
+        // Error callback
+        _searchQueue.errorCallback = ^{ @strongify(self)
+            [self.routesController setToolbarText:[NSString stringWithFormat:@"Error, stopped early. Found %@ restaurants.", @(self.POIs.count)]];
+        };
+        // Debug callback
+        _searchQueue.debugCallback = ^(NSInteger count) { @strongify(self)
+            [self.routesController setToolbarText:[NSString stringWithFormat:@"Fetching %@ results… ", @(count)]];
+        };
+    }
     
-    if (self.hideButtons) {
+    return _searchQueue;
+}
+
+- (void)setLoadingResults:(BOOL)loadingResults {
+    _loadingResults = loadingResults;
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = loadingResults;
+}
+
+#pragma mark - POI processing
+
+- (void)cancelSearch {
+    [_searchQueue cancelRequests];
+    self.loadingResults = NO;
+}
+
+- (void)updateCalloutViews {
+    if (self.routesController.textFieldsBothFull) {
         self.userLocationView.leftCalloutAccessoryView = nil;
         self.droppedPin.leftCalloutAccessoryView = nil;
     } else {
         
         // User location button
         ERCalloutView *userCalloutView       = [ERCalloutView viewForAnnotation:self.userLocationView];
-        userCalloutView.buttonTitleYOffset   += 5;
-        userCalloutView.useDestinationButton = self.barBackground.startTextField.text.length > 0;
+        userCalloutView.buttonTitleYOffset  += 5;
+        userCalloutView.useDestinationButton = self.routesController.start.text.length > 0;
         userCalloutView.buttonTapHandler     = ^{
             [self.mapView deselectAnnotation:self.userLocationView.annotation animated:YES];
-            if (self.barBackground.startTextField.text.length > 0) {
-                self.barBackground.endTextField.text = kCurrentLocationText;
-            } else {
-                self.barBackground.startTextField.text = kCurrentLocationText;
-            }
-            
-            [self updateMapButtons];
+            self.routesController.emptyTextField.text = kCurrentLocationText;
+            [self updateCalloutViews];
         };
         self.userLocationView.leftCalloutAccessoryView = userCalloutView;
         
         // Dropped pin button
         ERCalloutView *droppedPinButton       = [ERCalloutView viewForAnnotation:self.droppedPin];
-        droppedPinButton.useDestinationButton = self.barBackground.startTextField.text.length > 0;
+        droppedPinButton.useDestinationButton = userCalloutView.useDestinationButton;
         droppedPinButton.buttonTapHandler     = ^{
             [self.mapView deselectAnnotation:self.droppedPin.annotation animated:YES];
-            if (self.barBackground.startTextField.text.length > 0) {
-                self.barBackground.endTextField.text = self.droppedPin.annotation.subtitle;
-            } else {
-                self.barBackground.startTextField.text = self.droppedPin.annotation.subtitle;
-            }
-            
-            [self updateMapButtons];
+            self.routesController.emptyTextField.text = self.droppedPin.annotation.subtitle;
+            [self updateCalloutViews];
         };
         
         self.droppedPin.leftCalloutAccessoryView = droppedPinButton;
     }
 }
 
-#pragma mark - View management
-
-- (void)setupInitialBarButtonItems {
-    _clearButton.enabled = NO;
-    _routeButton.enabled = NO;
-    self.navigationItem.leftBarButtonItem  = _clearButton;
-    self.navigationItem.rightBarButtonItem = _routeButton;
+- (void)presentSuggestionsList {
+    [self removeRoutesFromView];
+    
+    if (self.suggestions) {
+        [self animateSuggestionsPresentation];
+    } else {
+        @weakify(self);
+        _suggestions = [ERSuggestionsViewController withAction:^(NSAttributedString *address) { @strongify(self);
+            if (self.routesController.start.isFirstResponder) {
+                // Set text and go to next field
+                self.routesController.start.text = address.string;
+                [self.routesController.dest becomeFirstResponder];
+                
+                [self.routesController selectTextOfActiveField];
+                
+                [self.suggestions updateQuery:nil];
+            } else if (self.routesController.dest.isFirstResponder) {
+                self.routesController.dest.text = address.string;
+            }
+        } location:self.userLocation];
+        
+        CGFloat y = CGRectGetMaxY(self.routesController.view.frame);
+        CGFloat w = CGRectGetWidth(self.routesController.view.frame);
+        CGFloat h = CGRectGetHeight(self.view.frame) - y;
+        self.suggestions.view.frame = CGRectMake(0, y, w, h);
+        
+        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kPref_didPromptForContactAccess];
+        if (self.suggestions.canShowContacts) {
+            [self animateSuggestionsPresentation];
+        } else {
+            UITextField *active = self.routesController.activeTextField;
+            [self.suggestions requestContactAccess:^{
+                [active becomeFirstResponder];
+                [self animateSuggestionsPresentation];
+            }];
+        }
+    }
 }
 
-- (void)setupSearchBarButtonItems {
-    _clearButton.enabled = YES;
-    self.navigationItem.rightBarButtonItem = _searchButton;
+- (void)animateSuggestionsPresentation {
+    [self addChildViewController:self.suggestions];
+    [self.suggestions animatePresentation];
 }
 
-- (void)setupResultsBarButtonItems {
-    _clearButton.enabled = YES;
-    self.navigationItem.rightBarButtonItem = nil;
-}
+#pragma mark - Picker view stuff
 
 - (void)removeRoutesFromView {
-    [self setupInitialBarButtonItems];
     [self dismissPickerView];
     
     [self.mapView removeOverlays:self.mapView.overlays];
     [self.renderers removeAllObjects];
-    self.toolbarLabel.text = nil;
+    [self.routesController setToolbarText:nil];
     
     self.routes              = nil;
     self.selectedRoute       = nil;
@@ -469,45 +363,7 @@ static BOOL trackUserInitially = YES;
     self.selectedCell        = nil;
 }
 
-- (void)resetMapView {
-    [self dismissPickerView];
-    
-    // Remove overlays, clear fields
-    [self.mapView removeOverlays:self.mapView.overlays];
-    [self.renderers removeAllObjects];
-    self.barBackground.startTextField.text = nil;
-    self.barBackground.endTextField.text   = nil;
-    // Remove annotations and POIs
-    [self.mapView removeAnnotations:self.mapView.annotations];
-    self.toolbarLabel.text = nil;
-}
-
-- (void)resetMapData {
-    self.routes              = nil;
-    self.selectedRoute       = nil;
-    self.selectedRouteIndex  = 0;
-    self.selectedCell        = nil;
-    [self.POIs removeAllObjects];
-    [self.latestPOIs removeAllObjects];
-}
-
-
-- (void)prepareForDefaultState {
-    [self setupInitialBarButtonItems];
-    [self resetMapView];
-    [self resetMapData];
-    [self updateMapButtons];
-    
-    self.barBackground.shrunken = NO;
-}
-
-- (void)prepareForSearchState {
-    [self setupSearchBarButtonItems];
-    
-    self.barBackground.shrunken = NO;
-    
-    self.toolbarLabel.text = nil;
-    
+- (void)setupRoutePickerView {
     _pickerController = [TBTableViewController new];
     _pickerController.defaultCanSelectRow = YES;
     _pickerController.tableView.tintColor = self.view.tintColor;
@@ -550,20 +406,6 @@ static BOOL trackUserInitially = YES;
         view;
     });
     [_pickerController.tableView addSubview:hairline];
-    
-    [self presentPickerView];
-}
-
-- (void)prepareForResultsState {
-    [self setupResultsBarButtonItems];
-    [self dismissPickerView];
-    
-    self.barBackground.shrunken = YES;
-    
-    // Remove unselected overlays
-    for (id<MKOverlay> overlay in self.mapView.overlays)
-        if (overlay != self.selectedRoute.polyline)
-            [self.mapView removeOverlay:overlay];
 }
 
 - (void)presentPickerView {
@@ -572,7 +414,7 @@ static BOOL trackUserInitially = YES;
     
     [self.view addSubview:_pickerController.tableView];
     
-    [UIView animateWithDuration:.5 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
+    [UIView animateSmoothly:^{
         [_pickerController.tableView setFrameY:y];
     } completion:nil];
 }
@@ -580,7 +422,7 @@ static BOOL trackUserInitially = YES;
 - (void)dismissPickerView {
     _pickerController.tableView.userInteractionEnabled = NO;
     
-    [UIView animateWithDuration:.5 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
+    [UIView animateSmoothly:^{
         [_pickerController.tableView setFrameY:CGRectGetHeight(self.view.frame)];
     } completion:^(BOOL finished) {
         [_pickerController.tableView removeFromSuperview];
@@ -593,13 +435,18 @@ static BOOL trackUserInitially = YES;
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
     switch (status) {
         case kCLAuthorizationStatusRestricted: {
-            NSString *message = @"It appears location services have been restricted. En Route won't be able to show you where you are.";
-            [[TBAlertController simpleOKAlertWithTitle:@"Location services restructed" message:message] showFromViewController:self];
+            // Tell the user once that their access is restricted
+            if (![[NSUserDefaults standardUserDefaults] boolForKey:kPref_didShowRestrictedContactAccessPrompt]) {
+                [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kPref_didShowRestrictedContactAccessPrompt];
+                NSString *message = @"It appears location services have been restricted. En Route won't be able to show you where you are.";
+                [[TBAlertController simpleOKAlertWithTitle:@"Location services restricted" message:message] showFromViewController:self];
+            }
             break;
         }
         case kCLAuthorizationStatusDenied: {
-            NSString *message = @"En Route needs access to your location to tell you where you are, and to show you how far you are from a given location.";
-            [[TBAlertController simpleOKAlertWithTitle:@"En Route needs location access" message:message] showFromViewController:self];
+            NSString *message = @"En Route uses your location to tell you where you are, and to show you how far you are from a given restaurant. ";
+            message = [message stringByAppendingString:@"You can enable access in settings."];
+            [[TBAlertController simpleOKAlertWithTitle:@"En Route would like location access" message:message] showFromViewController:self];
             break;
         }
         case kCLAuthorizationStatusNotDetermined:
@@ -613,26 +460,27 @@ static BOOL trackUserInitially = YES;
 }
 
 - (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation {
-    if (self.currentLocationIsPartOfRoute || !self.userTrackingButton.located) {
+    if (self.routesController.currentLocationIsPartOfRoute || self.routesController.userTrackingButton.state == MKUserTrackingStateNone) {
         return;
     }
     
-    if (!self.barBackground.startTextField.text.length) {
-        self.barBackground.startTextField.text = kCurrentLocationText;
-    } else if (!self.barBackground.endTextField.text.length) {
-        self.barBackground.endTextField.text = kCurrentLocationText;
-    }
+    self.routesController.emptyTextField.text = kCurrentLocationText;
     
-    [self updateMapButtons];
+    [self updateCalloutViews];
+    
+    // Turn off tracking after 2 seconds to allow zooming first
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self.mapView setUserTrackingMode:MKUserTrackingModeNone animated:YES];
+    });
     
     //     Demo code
-    //    static dispatch_once_t onceToken;
-    //    dispatch_once(&onceToken, ^{
-    //        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    //            self.barBackground.endTextField.text = @"4081 East Byp, College Station, TX  77845, United States";
-    //            [self beginRouting];
+    //        static dispatch_once_t onceToken;
+    //        dispatch_once(&onceToken, ^{
+    //            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    //                self.routesController.dest.text = @"I-55 S, Hammond, LA  70403, United States";
+    //                [self beginFindingRoutes];
+    //            });
     //        });
-    //    });
 }
 
 // Left this in this class because putting it in ERMapView caused the drop animation to disappear
@@ -643,21 +491,17 @@ static BOOL trackUserInitially = YES;
         self.userLocationView = user;
         
         // Hide buttons if both fields are full
-        if (!self.hideButtons && !self.currentLocationIsPartOfRoute) {
+        if (!self.routesController.textFieldsBothFull && !self.routesController.currentLocationIsPartOfRoute) {
             ERCalloutView *calloutView       = [ERCalloutView viewForAnnotation:user];
             calloutView.buttonTitleYOffset   += 5;
-            calloutView.useDestinationButton = self.barBackground.startTextField.text.length > 0;
+            calloutView.useDestinationButton = self.routesController.start.text.length > 0;
             user.leftCalloutAccessoryView    = calloutView;
             
             calloutView.buttonTapHandler     = ^{
                 [self.mapView deselectAnnotation:annotation animated:YES];
-                if (self.barBackground.startTextField.text.length > 0) {
-                    self.barBackground.endTextField.text = kCurrentLocationText;
-                } else {
-                    self.barBackground.startTextField.text = kCurrentLocationText;
-                }
+                self.routesController.emptyTextField.text = kCurrentLocationText;
                 
-                [self updateMapButtons];
+                [self updateCalloutViews];
             };
         }
         
@@ -680,19 +524,19 @@ static BOOL trackUserInitially = YES;
             self.mapView.pinAddressLoadHandler = ^(NSString *address) { @strongify(self)
                 
                 // Hide buttons if both fields are full
-                if (!self.hideButtons) {
+                if (!self.routesController.textFieldsBothFull) {
                     ERCalloutView *calloutView       = [ERCalloutView viewForAnnotation:pin];
-                    calloutView.useDestinationButton = self.barBackground.startTextField.text.length > 0;
+                    calloutView.useDestinationButton = self.routesController.start.text.length > 0;
                     pin.leftCalloutAccessoryView     = calloutView;
                     calloutView.buttonTapHandler     = ^{
                         [self.mapView deselectAnnotation:annotation animated:YES];
-                        if (self.barBackground.startTextField.text.length > 0) {
-                            self.barBackground.endTextField.text = address;
+                        if (self.routesController.start.text.length > 0) {
+                            self.routesController.dest.text = address;
                         } else {
-                            self.barBackground.startTextField.text = address;
+                            self.routesController.start.text = address;
                         }
                         
-                        [self updateMapButtons];
+                        [self updateCalloutViews];
                     };
                 }
             };
@@ -726,39 +570,122 @@ static BOOL trackUserInitially = YES;
     [[NSUserDefaults standardUserDefaults] setValue:MKStringFromMapRect(self.mapView.visibleMapRect) forKey:@"MapRekt"];
 }
 
-//- (void)updateOverlays {
-//    NSLog(@"============ Updating");
-//    for (MKOverlayRenderer *renderer in self.renderers)
-//        [renderer setNeedsDisplay];
-//}
+#pragma mark - ERRoutesControllerDelegate
 
-#pragma mark - UITextFieldDelegate
-
-- (BOOL)textFieldShouldReturn:(UITextField *)textField {
-    if (textField == _barBackground.startTextField) {
-        // Go to the next text field
-        [_barBackground.endTextField becomeFirstResponder];
-    } else {
-        // Only resign responder if text length
-        if (textField.text.length) {
-            [self beginRouting];
-        }
-    }
+- (void)beginSearch {
+    [self dismissPickerView];
     
-    return NO;
+    // Remove unselected overlays
+    for (id<MKOverlay> overlay in self.mapView.overlays)
+        if (overlay != self.selectedRoute.polyline)
+            [self.mapView removeOverlay:overlay];
+    
+    self.loadingResults = YES;
+    
+    [self.searchQueue searchRoutes:@[self.selectedRoute] repeatedCallback:^(NSArray *mapItems) {
+        // Update map, order is important
+        [self.latestPOIs setSet:[NSSet setWithArray:mapItems]];
+        [self.latestPOIs minusSet:self.POIs];
+        [self.POIs addObjectsFromArray:mapItems];
+        [self.mapView addAnnotations:self.latestAnnotations];
+        
+        // Update message and list button state
+        [self.routesController setToolbarText:[NSString stringWithFormat:@"Fetching results… %@ so far…", @(self.POIs.count)]];
+    } completion:^{
+        // Remove queue, cleanup
+        self.searchQueue = nil;
+        [self.latestPOIs removeAllObjects];
+        self.loadingResults = NO;
+        
+        // Final message
+        [self.routesController setToolbarText:[NSString stringWithFormat:@"%@ restaurants along your route", @(self.POIs.count)]];
+    }];
 }
 
-- (void)textFieldDidEndEditing:(UITextField *)textField {
-    [self updateMapButtons];
+- (void)resultsButtonPressed {
+    [self getStartPlacemark:^(MKPlacemark *start) {
+        UITableViewController *list = [ERListViewController listItems:self.POIs.allObjects currentLocation:start.location];
+        UIViewController *nav = [[UINavigationController alloc] initWithRootViewController:list];
+        nav.modalPresentationStyle = UIModalPresentationOverCurrentContext;
+        [self presentViewController:nav animated:YES completion:nil];
+    }];
 }
 
-- (void)textFieldDidBeginEditing:(UITextField *)textField {
+- (void)beginFindingRoutes {
     [self removeRoutesFromView];
     
-    [self.searchQueue cancelRequests];
-    [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-    self.loadingResults = NO;
-    [self updateNavigationItems];
+    [self.mapView removeOverlays:self.mapView.overlays];
+    [self.mapView removeAnnotations:self.mapView.resultAnnotations];
+    [self.POIs removeAllObjects];
+    
+    [self updateCalloutViews];
+    
+    self.loadingResults = YES;
+    
+    [self getStartPlacemark:^(MKPlacemark *start) {
+        [self getEndPlacemark:^(MKPlacemark *end) {
+            [self showRoutesForStart:start end:end];
+        }];
+    }];
+}
+
+- (void)clearButtonPressed {
+    // Remove overlays, clear fields
+    [self.mapView removeOverlays:self.mapView.overlays];
+    [self.renderers removeAllObjects];
+    
+    [self.routesController setToolbarText:nil];
+    
+    // Remove annotations and POIs
+    [self.mapView removeAnnotations:self.mapView.annotations];
+    
+    [self dismissPickerView];
+    [self resetMapData];
+    [self updateCalloutViews];
+}
+
+- (void)resetMapData {
+    self.routes              = nil;
+    self.selectedRoute       = nil;
+    self.selectedRouteIndex  = 0;
+    self.selectedCell        = nil;
+    [self.POIs removeAllObjects];
+    [self.latestPOIs removeAllObjects];
+}
+
+- (void)textFieldDidEndEditing {
+    [self updateCalloutViews];
+}
+
+- (void)textFieldWillClear {
+    [self.suggestions updateQuery:nil];
+}
+
+- (void)textFieldTextDidChange:(NSString *)newString {
+    [self.suggestions updateQuery:newString];
+}
+
+- (void)suggestionsShouldAppear {
+    [self cancelSearch];
+    [self presentSuggestionsList];
+}
+
+- (void)suggestionsShouldDismiss {
+    [self.suggestions animateDismissalAndRemove];
+}
+
+- (void)settingsShouldAppear {
+    self.settings = _settings ?: [ERSettingsViewController new];
+    [self.mapView dim:^{
+        [self.routesController teardownSettingsState];
+    }];
+    
+    [self.settings presentInView:self.navigationController.view];
+}
+
+- (void)settingsShouldDismiss {
+    [self.settings dismissFromView];
+    [self.mapView unDim];
 }
 
 @end

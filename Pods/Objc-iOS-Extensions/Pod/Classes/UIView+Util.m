@@ -20,6 +20,14 @@
     return img;
 }
 
++ (void)animateSmoothly:(void (^)())animations {
+    [self animateSmoothly:animations completion:nil];
+}
+
++ (void)animateSmoothly:(void (^)())animations completion:(void (^)(BOOL))completion {
+    [UIView animateWithDuration:.4 delay:0 usingSpringWithDamping:1 initialSpringVelocity:.2 options:0 animations:animations completion:completion];
+}
+
 - (UIView *)subviewWithClass:(Class)classObject {
     NSParameterAssert(classObject);
     if (!self.subviews.count) return nil;

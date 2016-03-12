@@ -8,16 +8,25 @@
 
 /* Begin PBXBuildFile section */
 		6DEB0F8991A83810D51031FE /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EE0C598ED700E1D7913EB82D /* libPods.a */; };
+		B4230E2D1C92AF7E003F53DE /* ERPickerCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B4230E2C1C92AF7E003F53DE /* ERPickerCell.m */; };
+		B4230E2F1C9403B4003F53DE /* Defaults.plist in Resources */ = {isa = PBXBuildFile; fileRef = B4230E2E1C9403B4003F53DE /* Defaults.plist */; };
 		B427A9871C8D1D5500018884 /* NSString+TemporaryFile.m in Sources */ = {isa = PBXBuildFile; fileRef = B427A9861C8D1D5500018884 /* NSString+TemporaryFile.m */; };
 		B427A98A1C8D22C400018884 /* MKMapItem+PostalAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = B427A9891C8D22C400018884 /* MKMapItem+PostalAddress.m */; };
 		B427A98D1C8D2AB500018884 /* ERMapItemActivityProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = B427A98C1C8D2AB500018884 /* ERMapItemActivityProvider.m */; };
 		B44643321C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m in Sources */ = {isa = PBXBuildFile; fileRef = B44643311C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m */; };
 		B44643351C912BFD009514E6 /* ERSuggestionsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B44643341C912BFD009514E6 /* ERSuggestionsViewController.m */; };
 		B44643381C91347F009514E6 /* ERSuggestionCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B44643371C91347F009514E6 /* ERSuggestionCell.m */; };
+		B462D49F1C92852D001AC4B2 /* ERSuggestion.m in Sources */ = {isa = PBXBuildFile; fileRef = B462D49E1C92852D001AC4B2 /* ERSuggestion.m */; };
+		B462D4A21C929D4A001AC4B2 /* CNContact+Name.m in Sources */ = {isa = PBXBuildFile; fileRef = B462D4A11C929D4A001AC4B2 /* CNContact+Name.m */; };
+		B462D4A71C92ACD4001AC4B2 /* ERSettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B462D4A61C92ACD4001AC4B2 /* ERSettingsViewController.m */; };
 		B468D8BB1C49C33400AFC6A7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8BA1C49C33400AFC6A7 /* main.m */; };
 		B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B468D8BD1C49C33400AFC6A7 /* ERAppDelegate.m */; };
 		B468D8C61C49C33400AFC6A7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B468D8C51C49C33400AFC6A7 /* Assets.xcassets */; };
 		B468D8C91C49C33400AFC6A7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B468D8C71C49C33400AFC6A7 /* LaunchScreen.storyboard */; };
+		B484E2EE1C941BD800EBC312 /* ERRoutesController.m in Sources */ = {isa = PBXBuildFile; fileRef = B484E2ED1C941BD800EBC312 /* ERRoutesController.m */; };
+		B484E2F11C941D0400EBC312 /* UINavigationBar+BarBackground.m in Sources */ = {isa = PBXBuildFile; fileRef = B484E2F01C941D0400EBC312 /* UINavigationBar+BarBackground.m */; };
+		B484E2F41C943F7C00EBC312 /* MKDirectionsRequest+SimpleDirections.m in Sources */ = {isa = PBXBuildFile; fileRef = B484E2F31C943F7C00EBC312 /* MKDirectionsRequest+SimpleDirections.m */; };
+		B484E2F71C944D6D00EBC312 /* ERTextFieldCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B484E2F61C944D6D00EBC312 /* ERTextFieldCell.m */; };
 		B49A2C7C1C72BCBC000752EF /* ERLocalSearchQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C791C72BCBC000752EF /* ERLocalSearchQueue.m */; };
 		B49A2C7D1C72BCBC000752EF /* TBTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C7B1C72BCBC000752EF /* TBTimer.m */; };
 		B49A2C841C72BCC2000752EF /* MKPlacemark+MKPointAnnotation.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C7F1C72BCC2000752EF /* MKPlacemark+MKPointAnnotation.m */; };
@@ -38,6 +47,9 @@
 
 /* Begin PBXFileReference section */
 		33393FC2D02729A40CD512E1 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
+		B4230E2B1C92AF7E003F53DE /* ERPickerCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERPickerCell.h; sourceTree = "<group>"; };
+		B4230E2C1C92AF7E003F53DE /* ERPickerCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERPickerCell.m; sourceTree = "<group>"; };
+		B4230E2E1C9403B4003F53DE /* Defaults.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Defaults.plist; sourceTree = "<group>"; };
 		B427A9851C8D1D5500018884 /* NSString+TemporaryFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+TemporaryFile.h"; sourceTree = "<group>"; };
 		B427A9861C8D1D5500018884 /* NSString+TemporaryFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+TemporaryFile.m"; sourceTree = "<group>"; };
 		B427A9881C8D22C400018884 /* MKMapItem+PostalAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MKMapItem+PostalAddress.h"; sourceTree = "<group>"; };
@@ -50,6 +62,12 @@
 		B44643341C912BFD009514E6 /* ERSuggestionsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERSuggestionsViewController.m; sourceTree = "<group>"; };
 		B44643361C91347F009514E6 /* ERSuggestionCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERSuggestionCell.h; sourceTree = "<group>"; };
 		B44643371C91347F009514E6 /* ERSuggestionCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERSuggestionCell.m; sourceTree = "<group>"; };
+		B462D49D1C92852D001AC4B2 /* ERSuggestion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERSuggestion.h; sourceTree = "<group>"; };
+		B462D49E1C92852D001AC4B2 /* ERSuggestion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERSuggestion.m; sourceTree = "<group>"; };
+		B462D4A01C929D4A001AC4B2 /* CNContact+Name.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CNContact+Name.h"; sourceTree = "<group>"; };
+		B462D4A11C929D4A001AC4B2 /* CNContact+Name.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CNContact+Name.m"; sourceTree = "<group>"; };
+		B462D4A51C92ACD4001AC4B2 /* ERSettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERSettingsViewController.h; sourceTree = "<group>"; };
+		B462D4A61C92ACD4001AC4B2 /* ERSettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERSettingsViewController.m; sourceTree = "<group>"; };
 		B468D8B61C49C33400AFC6A7 /* En Route.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "En Route.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B468D8BA1C49C33400AFC6A7 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		B468D8BC1C49C33400AFC6A7 /* ERAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ERAppDelegate.h; sourceTree = "<group>"; };
@@ -57,6 +75,14 @@
 		B468D8C51C49C33400AFC6A7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B468D8C81C49C33400AFC6A7 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B468D8CA1C49C33400AFC6A7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B484E2EC1C941BD800EBC312 /* ERRoutesController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERRoutesController.h; sourceTree = "<group>"; };
+		B484E2ED1C941BD800EBC312 /* ERRoutesController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERRoutesController.m; sourceTree = "<group>"; };
+		B484E2EF1C941D0400EBC312 /* UINavigationBar+BarBackground.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UINavigationBar+BarBackground.h"; sourceTree = "<group>"; };
+		B484E2F01C941D0400EBC312 /* UINavigationBar+BarBackground.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UINavigationBar+BarBackground.m"; sourceTree = "<group>"; };
+		B484E2F21C943F7C00EBC312 /* MKDirectionsRequest+SimpleDirections.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MKDirectionsRequest+SimpleDirections.h"; sourceTree = "<group>"; };
+		B484E2F31C943F7C00EBC312 /* MKDirectionsRequest+SimpleDirections.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MKDirectionsRequest+SimpleDirections.m"; sourceTree = "<group>"; };
+		B484E2F51C944D6D00EBC312 /* ERTextFieldCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERTextFieldCell.h; sourceTree = "<group>"; };
+		B484E2F61C944D6D00EBC312 /* ERTextFieldCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERTextFieldCell.m; sourceTree = "<group>"; };
 		B49A2C781C72BCBC000752EF /* ERLocalSearchQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERLocalSearchQueue.h; sourceTree = "<group>"; };
 		B49A2C791C72BCBC000752EF /* ERLocalSearchQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERLocalSearchQueue.m; sourceTree = "<group>"; };
 		B49A2C7A1C72BCBC000752EF /* TBTimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TBTimer.h; sourceTree = "<group>"; };
@@ -121,6 +147,32 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
+		B462D4A31C92AC6A001AC4B2 /* Suggestions */ = {
+			isa = PBXGroup;
+			children = (
+				B44643331C912BFD009514E6 /* ERSuggestionsViewController.h */,
+				B44643341C912BFD009514E6 /* ERSuggestionsViewController.m */,
+				B462D49D1C92852D001AC4B2 /* ERSuggestion.h */,
+				B462D49E1C92852D001AC4B2 /* ERSuggestion.m */,
+				B44643361C91347F009514E6 /* ERSuggestionCell.h */,
+				B44643371C91347F009514E6 /* ERSuggestionCell.m */,
+			);
+			path = Suggestions;
+			sourceTree = "<group>";
+		};
+		B462D4A41C92AC70001AC4B2 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				B462D4A51C92ACD4001AC4B2 /* ERSettingsViewController.h */,
+				B462D4A61C92ACD4001AC4B2 /* ERSettingsViewController.m */,
+				B4230E2B1C92AF7E003F53DE /* ERPickerCell.h */,
+				B4230E2C1C92AF7E003F53DE /* ERPickerCell.m */,
+				B484E2F51C944D6D00EBC312 /* ERTextFieldCell.h */,
+				B484E2F61C944D6D00EBC312 /* ERTextFieldCell.m */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
 		B468D8AD1C49C33400AFC6A7 = {
 			isa = PBXGroup;
 			children = (
@@ -149,6 +201,8 @@
 				B49A2C751C72B866000752EF /* Categories */,
 				B49A2C761C72BC88000752EF /* List */,
 				B49A2C731C72B85D000752EF /* Map */,
+				B462D4A31C92AC6A001AC4B2 /* Suggestions */,
+				B462D4A41C92AC70001AC4B2 /* Settings */,
 				B468D8B91C49C33400AFC6A7 /* Supporting Files */,
 			);
 			path = "En Route";
@@ -159,6 +213,7 @@
 			children = (
 				B468D8C71C49C33400AFC6A7 /* LaunchScreen.storyboard */,
 				B468D8CA1C49C33400AFC6A7 /* Info.plist */,
+				B4230E2E1C9403B4003F53DE /* Defaults.plist */,
 				B468D8BA1C49C33400AFC6A7 /* main.m */,
 				B49A2CA31C72BDA6000752EF /* En-Route-Prefix.pch */,
 				B49A2CA41C72C06E000752EF /* En-Route-Constants.h */,
@@ -172,6 +227,8 @@
 			children = (
 				B49A2C9A1C72BCD0000752EF /* ERMapViewController.h */,
 				B49A2C9B1C72BCD0000752EF /* ERMapViewController.m */,
+				B484E2EC1C941BD800EBC312 /* ERRoutesController.h */,
+				B484E2ED1C941BD800EBC312 /* ERRoutesController.m */,
 				B49A2C981C72BCD0000752EF /* ERMapView.h */,
 				B49A2C991C72BCD0000752EF /* ERMapView.m */,
 				B4E3474B1C767489005597E4 /* ERMapNavigationBarBackground.h */,
@@ -180,10 +237,6 @@
 				B49A2C951C72BCD0000752EF /* ERAddressTextField.m */,
 				B49A2C961C72BCD0000752EF /* ERCalloutView.h */,
 				B49A2C971C72BCD0000752EF /* ERCalloutView.m */,
-				B44643331C912BFD009514E6 /* ERSuggestionsViewController.h */,
-				B44643341C912BFD009514E6 /* ERSuggestionsViewController.m */,
-				B44643361C91347F009514E6 /* ERSuggestionCell.h */,
-				B44643371C91347F009514E6 /* ERSuggestionCell.m */,
 				B49A2C9C1C72BCD0000752EF /* TBTableViewController.h */,
 				B49A2C9D1C72BCD0000752EF /* TBTableViewController.m */,
 			);
@@ -203,6 +256,12 @@
 				B427A9891C8D22C400018884 /* MKMapItem+PostalAddress.m */,
 				B44643301C90F312009514E6 /* MKUserTrackingBarButtonItem+State.h */,
 				B44643311C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m */,
+				B462D4A01C929D4A001AC4B2 /* CNContact+Name.h */,
+				B462D4A11C929D4A001AC4B2 /* CNContact+Name.m */,
+				B484E2EF1C941D0400EBC312 /* UINavigationBar+BarBackground.h */,
+				B484E2F01C941D0400EBC312 /* UINavigationBar+BarBackground.m */,
+				B484E2F21C943F7C00EBC312 /* MKDirectionsRequest+SimpleDirections.h */,
+				B484E2F31C943F7C00EBC312 /* MKDirectionsRequest+SimpleDirections.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -210,12 +269,12 @@
 		B49A2C761C72BC88000752EF /* List */ = {
 			isa = PBXGroup;
 			children = (
+				B49A2C8B1C72BCCA000752EF /* ERListViewController.h */,
+				B49A2C8C1C72BCCA000752EF /* ERListViewController.m */,
 				B49A2C871C72BCCA000752EF /* ERListActivityCell.h */,
 				B49A2C881C72BCCA000752EF /* ERListActivityCell.m */,
 				B49A2C891C72BCCA000752EF /* ERListItemCell.h */,
 				B49A2C8A1C72BCCA000752EF /* ERListItemCell.m */,
-				B49A2C8B1C72BCCA000752EF /* ERListViewController.h */,
-				B49A2C8C1C72BCCA000752EF /* ERListViewController.m */,
 				B427A98B1C8D2AB500018884 /* ERMapItemActivityProvider.h */,
 				B427A98C1C8D2AB500018884 /* ERMapItemActivityProvider.m */,
 				B49A2C8D1C72BCCA000752EF /* ListActivityCell.xib */,
@@ -298,6 +357,7 @@
 			files = (
 				B49A2C931C72BCCA000752EF /* ListItemCell.xib in Resources */,
 				B468D8C91C49C33400AFC6A7 /* LaunchScreen.storyboard in Resources */,
+				B4230E2F1C9403B4003F53DE /* Defaults.plist in Resources */,
 				B49A2C921C72BCCA000752EF /* ListActivityCell.xib in Resources */,
 				B468D8C61C49C33400AFC6A7 /* Assets.xcassets in Resources */,
 			);
@@ -345,16 +405,24 @@
 			files = (
 				B427A9871C8D1D5500018884 /* NSString+TemporaryFile.m in Sources */,
 				B49A2C7C1C72BCBC000752EF /* ERLocalSearchQueue.m in Sources */,
+				B4230E2D1C92AF7E003F53DE /* ERPickerCell.m in Sources */,
 				B468D8BE1C49C33400AFC6A7 /* ERAppDelegate.m in Sources */,
 				B49A2C9E1C72BCD0000752EF /* ERAddressTextField.m in Sources */,
 				B427A98A1C8D22C400018884 /* MKMapItem+PostalAddress.m in Sources */,
 				B49A2C901C72BCCA000752EF /* ERListItemCell.m in Sources */,
+				B484E2EE1C941BD800EBC312 /* ERRoutesController.m in Sources */,
 				B468D8BB1C49C33400AFC6A7 /* main.m in Sources */,
+				B484E2F11C941D0400EBC312 /* UINavigationBar+BarBackground.m in Sources */,
 				B49A2C841C72BCC2000752EF /* MKPlacemark+MKPointAnnotation.m in Sources */,
 				B44643351C912BFD009514E6 /* ERSuggestionsViewController.m in Sources */,
 				B49A2CA01C72BCD0000752EF /* ERMapView.m in Sources */,
 				B44643381C91347F009514E6 /* ERSuggestionCell.m in Sources */,
 				B49A2C851C72BCC2000752EF /* NSIndexPath+Util.m in Sources */,
+				B462D4A21C929D4A001AC4B2 /* CNContact+Name.m in Sources */,
+				B484E2F71C944D6D00EBC312 /* ERTextFieldCell.m in Sources */,
+				B484E2F41C943F7C00EBC312 /* MKDirectionsRequest+SimpleDirections.m in Sources */,
+				B462D4A71C92ACD4001AC4B2 /* ERSettingsViewController.m in Sources */,
+				B462D49F1C92852D001AC4B2 /* ERSuggestion.m in Sources */,
 				B4E3474D1C767489005597E4 /* ERMapNavigationBarBackground.m in Sources */,
 				B49A2CA61C72C06E000752EF /* En-Route-Constants.m in Sources */,
 				B44643321C90F312009514E6 /* MKUserTrackingBarButtonItem+State.m in Sources */,

@@ -30,11 +30,8 @@ static const CGFloat kTFBottomPadding   = 12;
 
 @implementation ERMapNavigationBarBackground
 
-+ (instancetype)backgroundForBar:(UINavigationBar *)bar {
-    CGRect r = bar.bounds;
-    r.size.height = kControlViewHeight;
-    //    r.origin.y = -20;
-    return [[self alloc] initWithFrame:r];
+- (id)init {
+    return [self initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, kControlViewHeight)];
 }
 
 - (id)initWithFrame:(CGRect)frame {
@@ -53,6 +50,11 @@ static const CGFloat kTFBottomPadding   = 12;
         _startTextField.nameLabel.text = @"Start:";
         _endTextField.nameLabel.text   = @"End:";
         _endTextField.fieldEntryOffset = _startTextField.estimatedFieldEntryOffset;
+        _startTextField.returnKeyType = UIReturnKeyNext;
+        _endTextField.returnKeyType   = UIReturnKeyRoute;
+        _startTextField.enablesReturnKeyAutomatically = YES;
+        _endTextField.enablesReturnKeyAutomatically   = YES;
+        
         
         // Nav bar hairline
         _hairline = [[UIView alloc] initWithFrame:zero];
@@ -89,8 +91,11 @@ static const CGFloat kTFBottomPadding   = 12;
 - (void)didMoveToSuperview {
     [super didMoveToSuperview];
     
-    _defaultStartImage = [self.startTextField asImage];
-    _defaultendImage = [self.endTextField asImage];
+    // Dispatch because sometimes start text field wasn't captured
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        _defaultStartImage = [self.startTextField asImage];
+        _defaultendImage = [self.endTextField asImage];
+    });
 }
 
 - (void)setShrunken:(BOOL)shrunken {
@@ -105,7 +110,7 @@ static const CGFloat kTFBottomPadding   = 12;
     }
     
     self.isShrinkingOrGrowing = YES;
-    [UIView animateWithDuration:.2 animations:^{
+    [UIView animateSmoothly:^{
         if (_shrunken)
             [self shrink];
         else
@@ -142,8 +147,11 @@ static const CGFloat kTFBottomPadding   = 12;
 }
 
 - (void)updateImageViews {
-    self.startImageView.image = self.defaultStartImage;
-    self.endImageView.image = self.defaultendImage;
+    // Go back to the empty image if there's no text in the fields now
+    if (!self.startTextField.text.length)
+        self.startImageView.image = self.defaultStartImage;
+    if (!self.endTextField.text.length)
+        self.endImageView.image = self.defaultendImage;
 }
 
 - (void)shrink {
@@ -183,31 +191,6 @@ static const CGFloat kTFBottomPadding   = 12;
     
     self.startImageView.alpha = 1;
     self.endImageView.alpha = 1;
-}
-
-@end
-
-
-@implementation UINavigationBar (BarBackground)
-
-- (void)hideDefaultBackground {
-    self.backgroundColor = [UIColor clearColor];
-    self.barTintColor    = [UIColor clearColor];
-    self.shadowImage     = [UIImage new];
-    [self setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
-}
-
-- (void)showDefaultBackground {
-    self.backgroundColor = nil;
-    self.barTintColor    = nil;
-    self.shadowImage     = nil;
-    [self setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
-}
-
-- (void)setBackgroundView_:(UIView *)view {
-    [self hideDefaultBackground];
-    self.clipsToBounds = NO;
-    [self addSubview:view];
 }
 
 @end

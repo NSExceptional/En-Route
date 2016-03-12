@@ -64,6 +64,14 @@ static dispatch_queue_t _backgroundQueue;
     return self;
 }
 
+- (NSString *)query {
+    return self.request.naturalLanguageQuery;
+}
+
+- (void)setQuery:(NSString *)query {
+    self.request.naturalLanguageQuery = query;
+}
+
 - (void)decTimer {
     self.secondsLeft--;
     if (_secondsLeft < 0) {
@@ -147,7 +155,7 @@ static dispatch_queue_t _backgroundQueue;
         __block NSInteger i = _locations.count;
         __block BOOL stop = NO;
         for (CLLocation *loc in _locations) { if (stop) break;
-            self.request.region = MKCoordinateRegionMakeWithDistance(loc.coordinate, _searchRadius, _searchRadius);
+            self.request.region = MKCoordinateRegionMakeWithDistance(loc.coordinate, self.searchRadius, self.searchRadius);
             
             // Wait if necessary and call back to notify about the wait
             if (!self.ready) {

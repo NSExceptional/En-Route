@@ -12,8 +12,6 @@
 
 @interface ERMapNavigationBarBackground : UIView
 
-+ (instancetype)backgroundForBar:(UINavigationBar *)bar;
-
 @property (nonatomic) BOOL shrunken;
 
 @property (nonatomic, readonly) ERAddressTextField *startTextField;
@@ -21,9 +19,3 @@
 
 @end
 
-
-@interface UINavigationBar (BarBackground)
-- (void)hideDefaultBackground;
-- (void)setBackgroundView_:(UIView *)view;
-- (void)showDefaultBackground;
-@end

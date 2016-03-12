@@ -19,6 +19,9 @@ typedef NS_ENUM(NSUInteger, CGFramePart) {
 
 - (UIImage *)asImage;
 
++ (void)animateSmoothly:(void(^)())animations;
++ (void)animateSmoothly:(void(^)())animations completion:(void (^)(BOOL finished))completion;
+
 - (UIView *)subviewWithClass:(Class)classObject;
 - (UIView *)subviewWithClass:(Class)classObject passingTest:(BOOL(^)(UIView *view))test;
 

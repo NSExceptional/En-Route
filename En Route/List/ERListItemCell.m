@@ -36,7 +36,7 @@
     BOOL flipped = self.flipped;
     _flipped = !_flipped;
     
-    [UIView animateWithDuration:.2 animations:^{
+    [UIView animateSmoothly:^{
         if (flipped) {
             self.chevron.transform = CGAffineTransformMakeRotation(0);
             self.separatorInset = UIEdgeInsetsMake(0, 15, 0, 0);

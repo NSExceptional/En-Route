@@ -22,4 +22,7 @@ static const CGFloat kControlViewHeight = 140;
 
 @property (readonly, nonatomic) UIView *compassView_;
 
+- (void)dim:(VoidBlock)tapAction;
+- (void)unDim;
+
 @end

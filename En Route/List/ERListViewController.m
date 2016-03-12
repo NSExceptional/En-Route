@@ -37,6 +37,14 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
     return list;
 }
 
+- (void)loadView {
+    [super loadView];
+    
+    self.tableView.separatorInset  = UIEdgeInsetsMake(0, 15, 0, 0);
+    self.tableView.backgroundColor = nil;
+    self.tableView.backgroundView  = [UIVisualEffectView extraLightBlurView];
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     
@@ -51,9 +59,7 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
     if (![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]])
         _availableOptions--;
     
-    self.tableView.separatorInset = UIEdgeInsetsMake(0, 15, 0, 0);
-    self.tableView.backgroundColor = nil;
-    self.tableView.backgroundView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight]];
+
     [self.tableView registerNib:[UINib nibWithNibName:@"ListItemCell" bundle:nil] forCellReuseIdentifier:kListItemReuse];
     [self.tableView registerNib:[UINib nibWithNibName:@"ListActivityCell" bundle:nil] forCellReuseIdentifier:kListActivityReuse];
     
@@ -77,15 +83,21 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
 
 #pragma mark UITableViewDelegate
 
+- (BOOL)rowIsInDrawer:(NSIndexPath *)row {
+    return NSLocationInRange(row.row, NSMakeRange(self.expandedIndex+1, self.availableOptions));
+}
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
     // Flip selected cell and previously expanded row, if any
-    ERListItemCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-    [cell flipChevron];
-    if (self.expandedIndex != NSNotFound && self.expandedIndex != indexPath.row) {
-        cell = [tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:self.expandedIndex inSection:0]];
+    if (![self rowIsInDrawer:indexPath]) {
+        ERListItemCell *cell = [tableView cellForRowAtIndexPath:indexPath];
         [cell flipChevron];
+        if (self.expandedIndex != NSNotFound && self.expandedIndex != indexPath.row) {
+            cell = [tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:self.expandedIndex inSection:0]];
+            [cell flipChevron];
+        }
     }
     
     [tableView beginUpdates];
@@ -96,7 +108,7 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
         [self expandRow:indexPath.row];
     }
     // Initiate action for expanded row
-    else if (NSLocationInRange(indexPath.row, NSMakeRange(self.expandedIndex+1, self.availableOptions))) {
+    else if ([self rowIsInDrawer:indexPath]) {
         NSInteger row = indexPath.row - self.expandedIndex - 1;
         MKMapItem *item = self.items[self.expandedIndex];
         

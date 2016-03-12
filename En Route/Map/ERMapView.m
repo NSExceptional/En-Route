@@ -9,6 +9,14 @@
 #import "ERMapView.h"
 #import "MKPlacemark+MKPointAnnotation.h"
 
+
+@interface ERMapView ()
+
+@property (nonatomic) UIView *dimmingView;
+@property (nonatomic, copy) VoidBlock dimmingViewTapAction;
+
+@end
+
 @implementation ERMapView
 @dynamic panningGestureRecognizer;
 
@@ -79,6 +87,37 @@
     NSMutableArray *results = self.annotations.mutableCopy;
     [results removeObject:self.droppedPinAnnotation];
     return results;
+}
+
+- (void)dim:(VoidBlock)tapAction {
+    self.dimmingViewTapAction = tapAction;
+    
+    _dimmingView = ({
+        UIView *view = [[UIView alloc] initWithFrame:self.bounds];
+        view.backgroundColor = [UIColor colorWithWhite:0.000 alpha:0.500];
+        view.alpha = 0;
+        
+        [view addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dimmingViewTapped)]];
+        view;
+    });
+    
+    [self addSubview:_dimmingView];
+    [UIView animateWithDuration:kAnimationDuration/2 animations:^{
+        _dimmingView.alpha = 1;
+    }];
+}
+
+- (void)unDim {
+    [UIView animateWithDuration:kAnimationDuration/2 animations:^{
+        _dimmingView.alpha = 0;
+    } completion:^(BOOL finished) {
+        [_dimmingView removeFromSuperview];
+        _dimmingView = nil;
+    }];
+}
+
+- (void)dimmingViewTapped {
+    if (self.dimmingViewTapAction) self.dimmingViewTapAction();
 }
 
 @end

@@ -22,7 +22,8 @@
 
 - (NSString *)formattedAddress {
     NSString *address = [self.addressDictionary[@"FormattedAddressLines"] componentsJoinedByString:@", "];
-    if (address) return address;
+    if (address)
+        return address;
     
     NSMutableString *formatted = [NSMutableString string];
     [formatted appendString:self.addressDictionary[@"Street"]]; [formatted appendString:@", "];
