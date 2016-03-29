@@ -9,6 +9,8 @@
 #import <Foundation/Foundation.h>
 @import Contacts;
 
+extern CGFloat const kIconHeight;
+
 
 @interface ERSuggestion : NSObject
 

@@ -8,6 +8,8 @@
 
 #import "ERSuggestion.h"
 
+CGFloat const kIconHeight = 42;
+
 @implementation ERSuggestion
 @synthesize icon = _icon;
 
@@ -67,9 +69,9 @@
     return [self suggestionWithName:name address:plainAddress icon:[UIImage imageWithData:contact.thumbnailImageData] query:query];
 }
 
-+ (instancetype)suggestionWithName:(NSString *)name address:(NSString *)address icon:(UIImage *)icon  query:(NSString *)query {
++ (instancetype)suggestionWithName:(NSString *)name address:(NSString *)address icon:(UIImage *)icon query:(NSString *)query {
     ERSuggestion *suggestion = [self new];
-    
+    suggestion.icon = icon;
     // Add bold attribute to matching parts of strings
     
     if ([name containsString:query]) {
@@ -103,6 +105,20 @@
 
 - (UIImage *)icon {
     return _icon ?: [UIImage imageNamed:@"testicon"];
+}
+
+- (void)setIcon:(UIImage *)icon {
+    if (icon) {
+        if (icon.size.height > icon.size.width) {
+            icon = [icon scaledDownToFitSize:CGSizeMake(kIconHeight, CGFLOAT_MAX)];
+        } else if (icon.size.width > icon.size.height) {
+            icon = [icon scaledDownToFitSize:CGSizeMake(CGFLOAT_MAX, kIconHeight)];
+        } else {
+            icon = [icon scaledDownToFitSize:CGSizeMake(kIconHeight, kIconHeight)];
+        }
+    }
+    
+    _icon = icon;
 }
 
 - (NSString *)description {

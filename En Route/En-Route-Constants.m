@@ -23,4 +23,7 @@ NSString * const kPref_locationNotRightNowDate = @"location_not_right_now_date";
 NSString * const kPref_contactsDontAskAgain    = @"contacts_dont_ask_again";
 NSString * const kPref_contactsNotRightNowDate = @"contacts_not_right_now_date";
 
+NSString * const kPref_lastLocationAccessStatus = @"location_last_access_status";
+NSString * const kPref_lastContactsAccessStatus = @"contacts_last_access_status";
+
 CGFloat const kAnimationDuration = .4;

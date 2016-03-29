@@ -16,7 +16,7 @@
 #import "ERSettingsViewController.h"
 #import "ERRoutesController.h"
 
-static BOOL trackUserInitially = YES;
+static BOOL trackUserInitially = NO;
 
 @interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate, UITextFieldDelegate, ERRoutesControllerDelegate>
 
@@ -74,6 +74,8 @@ static BOOL trackUserInitially = YES;
         self.mapView.visibleMapRect = *((MKMapRect*)&r);
         self.mapView.userTrackingMode = MKUserTrackingModeNone;
         trackUserInitially = NO;
+    } else {
+        trackUserInitially = YES;
     }
 }
 
@@ -97,6 +99,9 @@ static BOOL trackUserInitially = YES;
     CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
     switch (status) {
         case kCLAuthorizationStatusNotDetermined: {
+            // They told us not to ask again
+            if ([[NSUserDefaults standardUserDefaults] boolForKey:kPref_locationDontAskAgain]) break;
+            
             NSString *message = @"Do you want to allow En Route to use your location while using the app to provide you with a better experience? You can always disable this feature in Settings.";
             TBAlertController *locationRequest = [TBAlertController alertViewWithTitle:@"Location services" message:message];
             [locationRequest addOtherButtonWithTitle:@"Yes" buttonAction:^(NSArray * _Nonnull textFieldStrings) {
@@ -104,23 +109,28 @@ static BOOL trackUserInitially = YES;
             }];
             [locationRequest addOtherButtonWithTitle:@"Not right now" buttonAction:^(NSArray *textFieldStrings) {
                 [[NSUserDefaults standardUserDefaults] setObject:[NSDate date] forKey:kPref_locationNotRightNowDate];
+                self.mapView.userTrackingMode = MKUserTrackingModeNone;
             }];
             [locationRequest setCancelButtonWithTitle:@"No, don't ask me again" buttonAction:^(NSArray * _Nonnull textFieldStrings) {
                 [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kPref_locationDontAskAgain];
+                self.mapView.userTrackingMode = MKUserTrackingModeNone;
             }];
             
             [locationRequest showFromViewController:self];
             
             break;
         }
-        case kCLAuthorizationStatusRestricted:
-        case kCLAuthorizationStatusDenied:
         case kCLAuthorizationStatusAuthorizedAlways:
-        case kCLAuthorizationStatusAuthorizedWhenInUse: {
+        case kCLAuthorizationStatusAuthorizedWhenInUse:
+            if (trackUserInitially) {
+                [self.mapView setUserTrackingMode:MKUserTrackingModeFollow animated:YES];
+            }
+        case kCLAuthorizationStatusDenied:
+        case kCLAuthorizationStatusRestricted:
             break;
-        }
     }
     
+    [[NSUserDefaults standardUserDefaults] setInteger:status forKey:kPref_lastLocationAccessStatus];
 }
 
 - (void)addChildViewController:(UIViewController *)childController {
@@ -433,8 +443,12 @@ static BOOL trackUserInitially = YES;
 #pragma mark - CLLocationManagerDelegate, MKMapViewDelegate
 
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
+    [[NSUserDefaults standardUserDefaults] setInteger:status forKey:kPref_lastLocationAccessStatus];
+    
     switch (status) {
         case kCLAuthorizationStatusRestricted: {
+            [self.mapView setUserTrackingMode:MKUserTrackingModeNone animated:YES];
+            
             // Tell the user once that their access is restricted
             if (![[NSUserDefaults standardUserDefaults] boolForKey:kPref_didShowRestrictedContactAccessPrompt]) {
                 [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kPref_didShowRestrictedContactAccessPrompt];
@@ -444,18 +458,21 @@ static BOOL trackUserInitially = YES;
             break;
         }
         case kCLAuthorizationStatusDenied: {
+            [self.mapView setUserTrackingMode:MKUserTrackingModeNone animated:YES];
+            
+            // Tell the user that we want their location access
             NSString *message = @"En Route uses your location to tell you where you are, and to show you how far you are from a given restaurant. ";
             message = [message stringByAppendingString:@"You can enable access in settings."];
             [[TBAlertController simpleOKAlertWithTitle:@"En Route would like location access" message:message] showFromViewController:self];
             break;
         }
-        case kCLAuthorizationStatusNotDetermined:
         case kCLAuthorizationStatusAuthorizedAlways:
-        case kCLAuthorizationStatusAuthorizedWhenInUse: {
-            if (trackUserInitially)
+        case kCLAuthorizationStatusAuthorizedWhenInUse:
+            if (trackUserInitially) {
                 [self.mapView setUserTrackingMode:MKUserTrackingModeFollow animated:YES];
+            }
+        case kCLAuthorizationStatusNotDetermined:
             break;
-        }
     }
 }
 

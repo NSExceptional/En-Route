@@ -81,6 +81,32 @@
     return result;
 }
 
+- (UIImage *)scaledDownToFitSize:(CGSize)size {
+    size.width *= self.scale, size.height *= self.scale;
+    CGFloat widthScale  = size.width / self.size.width;
+    CGFloat heightScale = size.height / self.size.height;
+    CGFloat scale;
+    
+    if (widthScale >= 1 && heightScale >= 1) return self;
+    
+    if (widthScale < 1) {
+        if (heightScale < 1) {
+            scale = MIN(widthScale, heightScale);
+        } else {
+            scale = widthScale;
+        }
+    } else {
+        scale = heightScale;
+    }
+    
+    size = CGSizeMake(self.size.width * scale, self.size.height * scale);
+    UIGraphicsBeginImageContextWithOptions(size, NO, 0.0);
+    [self drawInRect:CGRectMake(0, 0, size.width, size.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+
 - (void)saveToLibrary:(void (^)(NSError *error))completion {
     ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
     

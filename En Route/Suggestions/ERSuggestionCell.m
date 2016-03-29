@@ -8,6 +8,7 @@
 
 #import "ERSuggestionCell.h"
 #import "Masonry.h"
+#import "ERSuggestion.h"
 
 
 @interface ERSuggestionCell ()
@@ -22,6 +23,9 @@
         _nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 1, 1)];
         _addressLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 1, 1)];
         _iconImageView = [[UIImageView alloc] initWithImage:nil];
+        _iconImageView.layer.cornerRadius = kIconHeight/2.f;
+        _iconImageView.clipsToBounds = YES;
+        _iconImageView.contentMode = UIViewContentModeScaleAspectFill;
         
         _addressLabel.font = [UIFont systemFontOfSize:14];
         _addressLabel.textColor = [[self class] secondaryColor];

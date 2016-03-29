@@ -106,6 +106,8 @@ static CLLocationDistance searchRadius = 10000;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         CNAuthorizationStatus status = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
+        [[NSUserDefaults standardUserDefaults] setInteger:status forKey:kPref_lastContactsAccessStatus];
+        
         switch (status) {
             case CNAuthorizationStatusNotDetermined: {
                 break;
@@ -121,8 +123,6 @@ static CLLocationDistance searchRadius = 10000;
             }
             case CNAuthorizationStatusDenied: { break; }
             case CNAuthorizationStatusAuthorized: {
-                // Re-enable the restricted warning if it was ever off
-                [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kPref_didShowRestrictedContactAccessPrompt];
                 access = YES;
             }
         }
@@ -152,7 +152,10 @@ static CLLocationDistance searchRadius = 10000;
                 [[TBAlertController simpleOKAlertWithTitle:@"Address book access" message:message] showFromViewController:self];
             }
             
-            if (callback) callback();
+            // Present suggestions again
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (callback) callback();
+            });
         }];
     }];
     [alert addOtherButtonWithTitle:@"Not right now" buttonAction:^(NSArray *textFieldStrings) {

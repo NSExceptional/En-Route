@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** @return The image centered in the padding, or the original image if it does not fit in the given size. */
 - (UIImage *)paddedToSize:(CGSize)size;
 - (UIImage *)croppedToRect:(CGRect)rect;
+- (UIImage *)scaledDownToFitSize:(CGSize)size;
 
 /// Saves the recieving image to the camera roll.
 - (void)saveToLibrary:(void (^)(NSError *error))completion;

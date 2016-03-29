@@ -29,11 +29,29 @@
     tap.numberOfTouchesRequired = 3;
     [self.window addGestureRecognizer:tap];
     
+    [self potentiallyResetPrompts];
+    
 #if TARGET_IPHONE_SIMULATOR
     [[FLEXManager sharedManager] showExplorer];
 #endif
     
     return YES;
+}
+
+- (void)potentiallyResetPrompts {
+    // Location
+    CLAuthorizationStatus locStatus = [CLLocationManager authorizationStatus];
+    if (locStatus != [[NSUserDefaults standardUserDefaults] integerForKey:kPref_lastLocationAccessStatus]) {
+        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kPref_locationDontAskAgain];
+        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kPref_didShowRestrictedLocationAccessPrompt];
+    }
+    
+    // Contacts
+    CNAuthorizationStatus contactsStatus = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
+    if (contactsStatus != [[NSUserDefaults standardUserDefaults] integerForKey:kPref_lastContactsAccessStatus]) {
+        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kPref_contactsDontAskAgain];
+        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kPref_didShowRestrictedContactAccessPrompt];
+    }
 }
 
 

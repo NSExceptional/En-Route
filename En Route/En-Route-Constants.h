@@ -25,4 +25,7 @@ extern NSString * const kPref_locationNotRightNowDate;
 extern NSString * const kPref_contactsDontAskAgain;
 extern NSString * const kPref_contactsNotRightNowDate;
 
+extern NSString * const kPref_lastLocationAccessStatus;
+extern NSString * const kPref_lastContactsAccessStatus;
+
 extern CGFloat const kAnimationDuration;

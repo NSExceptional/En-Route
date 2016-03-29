@@ -72,7 +72,6 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
     self.start.delegate = self;
     self.dest.delegate  = self;
     
