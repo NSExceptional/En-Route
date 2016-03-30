@@ -124,11 +124,11 @@ static NSString * const kFeedbackReuse = @"ERFeedbackCellsReuse";
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     switch (section) {
         case 0:
-            return @"What are you hungry for?";
+            return @"Query";
         case 1:
             return @"Search radius";
         case 2:
-            return @"Feedback";
+            return nil;
             
         default:
             return nil;
@@ -138,9 +138,9 @@ static NSString * const kFeedbackReuse = @"ERFeedbackCellsReuse";
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     switch (section) {
         case 0:
-            return @"Tap to edit";
+            return @"What are you looking for? A place to eat, lodging, etc. Tap to edit.";
         case 1:
-            return @"Radius in meters to search along the path to the path you choose."
+            return @"Radius (in meters) to search along the path of the route you choose."
             " Larger radii will search faster, but smaller radii will yield more results in most cases. Use a small radius with very short routes.";
         case 2:
             return @"Made by Tanner Bennett with help from London Steele at Baylor University."

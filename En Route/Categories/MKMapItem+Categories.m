@@ -64,7 +64,7 @@ NSString * const kCategoryRealEstate        = @"Real Estate";
                            kCategoryAutomotive: @"c_automotive",
                            kCategoryMedical: @"c_medical",
                            kCategoryGovernment: @"c_government",
-                           kCategoryLocalServices: @"c_local",
+                           kCategoryLocalServices: @"c_local_services",
                            kCategoryEntertainment: @"c_entertainment",
                            kCategoryProfessional: @"c_professional",
                            kCategoryEventServices: @"c_event",
