@@ -73,17 +73,17 @@ static NSString * const kFeedbackReuse = @"ERFeedbackCellsReuse";
 #pragma mark UITableViewDelegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSParameterAssert(indexPath.section == 1 || indexPath.section == 3);
+    NSParameterAssert(indexPath.section == 2);
     
-    // The only selectable row is in the second section
-    if (indexPath.section == 1) {
+    // The only selectable row is in the third section
+    if (indexPath.section == 2) {
         [tableView deselectRowAtIndexPath:indexPath animated:YES];
         [self composeEmail];
     }
 }
 
 - (BOOL)tableView:(UITableView *)tableView shouldHighlightRowAtIndexPath:(NSIndexPath *)indexPath {
-    return indexPath.section > 1;
+    return indexPath.section == 2;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {

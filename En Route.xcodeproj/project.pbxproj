@@ -42,6 +42,7 @@
 		B49A2CA11C72BCD0000752EF /* ERMapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C9B1C72BCD0000752EF /* ERMapViewController.m */; };
 		B49A2CA21C72BCD0000752EF /* TBTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2C9D1C72BCD0000752EF /* TBTableViewController.m */; };
 		B49A2CA61C72C06E000752EF /* En-Route-Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = B49A2CA51C72C06E000752EF /* En-Route-Constants.m */; };
+		B4C90BE71CAB6246005534E2 /* MKMapItem+Categories.m in Sources */ = {isa = PBXBuildFile; fileRef = B4C90BE61CAB6246005534E2 /* MKMapItem+Categories.m */; };
 		B4E3474D1C767489005597E4 /* ERMapNavigationBarBackground.m in Sources */ = {isa = PBXBuildFile; fileRef = B4E3474C1C767489005597E4 /* ERMapNavigationBarBackground.m */; };
 /* End PBXBuildFile section */
 
@@ -112,6 +113,8 @@
 		B49A2CA31C72BDA6000752EF /* En-Route-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "En-Route-Prefix.pch"; sourceTree = "<group>"; };
 		B49A2CA41C72C06E000752EF /* En-Route-Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "En-Route-Constants.h"; sourceTree = "<group>"; };
 		B49A2CA51C72C06E000752EF /* En-Route-Constants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "En-Route-Constants.m"; sourceTree = "<group>"; };
+		B4C90BE51CAB6246005534E2 /* MKMapItem+Categories.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MKMapItem+Categories.h"; sourceTree = "<group>"; };
+		B4C90BE61CAB6246005534E2 /* MKMapItem+Categories.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MKMapItem+Categories.m"; sourceTree = "<group>"; };
 		B4E3474B1C767489005597E4 /* ERMapNavigationBarBackground.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ERMapNavigationBarBackground.h; sourceTree = "<group>"; };
 		B4E3474C1C767489005597E4 /* ERMapNavigationBarBackground.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ERMapNavigationBarBackground.m; sourceTree = "<group>"; };
 		EDDF7E5BC73E9E7F9D682952 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
@@ -262,6 +265,8 @@
 				B484E2F01C941D0400EBC312 /* UINavigationBar+BarBackground.m */,
 				B484E2F21C943F7C00EBC312 /* MKDirectionsRequest+SimpleDirections.h */,
 				B484E2F31C943F7C00EBC312 /* MKDirectionsRequest+SimpleDirections.m */,
+				B4C90BE51CAB6246005534E2 /* MKMapItem+Categories.h */,
+				B4C90BE61CAB6246005534E2 /* MKMapItem+Categories.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -416,6 +421,7 @@
 				B49A2C841C72BCC2000752EF /* MKPlacemark+MKPointAnnotation.m in Sources */,
 				B44643351C912BFD009514E6 /* ERSuggestionsViewController.m in Sources */,
 				B49A2CA01C72BCD0000752EF /* ERMapView.m in Sources */,
+				B4C90BE71CAB6246005534E2 /* MKMapItem+Categories.m in Sources */,
 				B44643381C91347F009514E6 /* ERSuggestionCell.m in Sources */,
 				B49A2C851C72BCC2000752EF /* NSIndexPath+Util.m in Sources */,
 				B462D4A21C929D4A001AC4B2 /* CNContact+Name.m in Sources */,
