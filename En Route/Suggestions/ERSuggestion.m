@@ -38,7 +38,7 @@ CGFloat const kIconHeight = 42;
         }
     } else {
         UIImage *icon = [UIImage imageWithData:contact.thumbnailImageData];
-        [suggestions addObject:[ERSuggestion suggestionWithName:contact.displayName address:[formatter stringFromPostalAddress:address] icon:icon query:query]];
+        [suggestions addObject:[ERSuggestion suggestionWithName:contact.displayName address:[formatter stringFromPostalAddress:address] icon:icon query:query data:contact]];
     }
     
     return suggestions.copy;
@@ -66,12 +66,13 @@ CGFloat const kIconHeight = 42;
     }
     
     
-    return [self suggestionWithName:name address:plainAddress icon:[UIImage imageWithData:contact.thumbnailImageData] query:query];
+    return [self suggestionWithName:name address:plainAddress icon:[UIImage imageWithData:contact.thumbnailImageData] query:query data:contact];
 }
 
-+ (instancetype)suggestionWithName:(NSString *)name address:(NSString *)address icon:(UIImage *)icon query:(NSString *)query {
++ (instancetype)suggestionWithName:(NSString *)name address:(NSString *)address icon:(UIImage *)icon query:(NSString *)query data:(id)data {
     ERSuggestion *suggestion = [self new];
     suggestion.icon = icon;
+    suggestion->_data = data;
     // Add bold attribute to matching parts of strings
     
     if ([name containsString:query]) {
@@ -97,14 +98,10 @@ CGFloat const kIconHeight = 42;
     NSMutableArray *suggestions = [NSMutableArray array];
     
     for (MKMapItem *item in items) {
-        [suggestions addObject:[ERSuggestion suggestionWithName:item.name address:item.placemark.formattedAddress icon:nil query:query]];
+        [suggestions addObject:[ERSuggestion suggestionWithName:item.name address:item.placemark.formattedAddress icon:item.categoryIcon query:query data:item]];
     }
     
     return suggestions.copy;
-}
-
-- (UIImage *)icon {
-    return _icon ?: [UIImage imageNamed:@"testicon"];
 }
 
 - (void)setIcon:(UIImage *)icon {

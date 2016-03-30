@@ -24,6 +24,7 @@
 #import "MKUserTrackingBarButtonItem+State.h"
 #import "MKMapItem+PostalAddress.h"
 #import "MKPlacemark+MKPointAnnotation.h"
+#import "MKMapItem+Categories.h"
 #import "CNContact+Name.h"
 #import "UINavigationBar+BarBackground.h"
 #import "MKDirectionsRequest+SimpleDirections.h"
