@@ -16,6 +16,7 @@
 #import "ERSettingsViewController.h"
 #import "ERRoutesController.h"
 
+
 static BOOL trackUserInitially = NO;
 
 @interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate, UITextFieldDelegate, ERRoutesControllerDelegate>
@@ -45,7 +46,6 @@ static BOOL trackUserInitially = NO;
 @property (nonatomic) UITableViewCell       *selectedCell;
 
 @end
-
 
 @implementation ERMapViewController
 
@@ -95,42 +95,45 @@ static BOOL trackUserInitially = NO;
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     
-    // Request location access or let the user know we need location access.
-    CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
-    switch (status) {
-        case kCLAuthorizationStatusNotDetermined: {
-            // They told us not to ask again
-            if ([[NSUserDefaults standardUserDefaults] boolForKey:kPref_locationDontAskAgain]) break;
-            
-            NSString *message = @"Do you want to allow En Route to use your location while using the app to provide you with a better experience? You can always disable this feature in Settings.";
-            TBAlertController *locationRequest = [TBAlertController alertViewWithTitle:@"Location services" message:message];
-            [locationRequest addOtherButtonWithTitle:@"Yes" buttonAction:^(NSArray * _Nonnull textFieldStrings) {
-                [self.locationManager requestWhenInUseAuthorization];
-            }];
-            [locationRequest addOtherButtonWithTitle:@"Not right now" buttonAction:^(NSArray *textFieldStrings) {
-                [[NSUserDefaults standardUserDefaults] setObject:[NSDate date] forKey:kPref_locationNotRightNowDate];
-                self.mapView.userTrackingMode = MKUserTrackingModeNone;
-            }];
-            [locationRequest setCancelButtonWithTitle:@"No, don't ask me again" buttonAction:^(NSArray * _Nonnull textFieldStrings) {
-                [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kPref_locationDontAskAgain];
-                self.mapView.userTrackingMode = MKUserTrackingModeNone;
-            }];
-            
-            [locationRequest showFromViewController:self];
-            
-            break;
-        }
-        case kCLAuthorizationStatusAuthorizedAlways:
-        case kCLAuthorizationStatusAuthorizedWhenInUse:
-            if (trackUserInitially) {
-                [self.mapView setUserTrackingMode:MKUserTrackingModeFollow animated:YES];
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        // Request location access or let the user know we need location access.
+        CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
+        switch (status) {
+            case kCLAuthorizationStatusNotDetermined: {
+                // They told us not to ask again
+                if ([[NSUserDefaults standardUserDefaults] boolForKey:kPref_locationDontAskAgain]) break;
+                
+                NSString *message = @"Do you want to allow En Route to use your location while using the app to provide you with a better experience? You can always disable this feature in Settings.";
+                TBAlertController *locationRequest = [TBAlertController alertViewWithTitle:@"Location services" message:message];
+                [locationRequest addOtherButtonWithTitle:@"Yes" buttonAction:^(NSArray *textFieldStrings) {
+                    [self.locationManager requestWhenInUseAuthorization];
+                }];
+                [locationRequest addOtherButtonWithTitle:@"Not right now" buttonAction:^(NSArray *textFieldStrings) {
+                    [[NSUserDefaults standardUserDefaults] setObject:[NSDate date] forKey:kPref_locationNotRightNowDate];
+                    self.mapView.userTrackingMode = MKUserTrackingModeNone;
+                }];
+                [locationRequest setCancelButtonWithTitle:@"No, don't ask me again" buttonAction:^(NSArray *textFieldStrings) {
+                    [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kPref_locationDontAskAgain];
+                    self.mapView.userTrackingMode = MKUserTrackingModeNone;
+                }];
+                
+                [locationRequest showFromViewController:self];
+                
+                break;
             }
-        case kCLAuthorizationStatusDenied:
-        case kCLAuthorizationStatusRestricted:
-            break;
-    }
-    
-    [[NSUserDefaults standardUserDefaults] setInteger:status forKey:kPref_lastLocationAccessStatus];
+            case kCLAuthorizationStatusAuthorizedAlways:
+            case kCLAuthorizationStatusAuthorizedWhenInUse:
+                if (trackUserInitially) {
+                    [self.mapView setUserTrackingMode:MKUserTrackingModeFollow animated:YES];
+                }
+            case kCLAuthorizationStatusDenied:
+            case kCLAuthorizationStatusRestricted:
+                break;
+        }
+        
+        [[NSUserDefaults standardUserDefaults] setInteger:status forKey:kPref_lastLocationAccessStatus];
+    });
 }
 
 - (void)addChildViewController:(UIViewController *)childController {
@@ -691,13 +694,26 @@ static BOOL trackUserInitially = NO;
     [self.suggestions animateDismissalAndRemove];
 }
 
-- (void)settingsShouldAppear {
+- (BOOL)settingsShouldAppear {
     self.settings = _settings ?: [ERSettingsViewController new];
-    [self.mapView dim:^{
-        [self.routesController teardownSettingsState];
-    }];
+    CGFloat screenHeight = [UIScreen mainScreen].bounds.size.height - 64;
     
-    [self.settings presentInView:self.navigationController.view];
+    // Present modally if the table view would be too tall
+    [self.settings.view sizeToFit];
+    if (CGRectGetHeight(self.settings.view.frame) >= screenHeight) {
+        self.settings.tableView.scrollEnabled = YES;
+        [self presentViewController:[UINavigationController dismissableWithViewController:self.settings] animated:YES completion:nil];
+        return NO;
+    }
+    // Present fancy if we have the room
+    else {
+        [self.mapView dim:^{
+            [self.routesController teardownSettingsState];
+        }];
+        [self.settings presentInView:self.navigationController.view];
+        
+        return YES;
+    }
 }
 
 - (void)settingsShouldDismiss {

@@ -11,5 +11,6 @@
 @interface UINavigationController (Util)
 
 @property (nonatomic, readonly) UIViewController *topmostViewController;
++ (instancetype)dismissableWithViewController:(UIViewController *)controller;
 
 @end

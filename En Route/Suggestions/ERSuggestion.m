@@ -113,6 +113,8 @@ CGFloat const kIconHeight = 42;
         } else {
             icon = [icon scaledDownToFitSize:CGSizeMake(kIconHeight, kIconHeight)];
         }
+    } else {
+        icon = [UIImage imageNamed:@"contact_default"];
     }
     
     _icon = icon;

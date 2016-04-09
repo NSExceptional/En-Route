@@ -19,4 +19,10 @@
     return self.viewControllers.lastObject.topmostViewController ?: self;
 }
 
++ (instancetype)dismissableWithViewController:(UIViewController *)controller {
+    UINavigationController *me = [[UINavigationController alloc] initWithRootViewController:controller];
+    controller.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:me action:@selector(dismissAnimated)];
+    return me;
+}
+
 @end

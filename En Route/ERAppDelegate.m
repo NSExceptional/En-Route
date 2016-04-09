@@ -11,10 +11,17 @@
 
 #import <MapKit/MKPolylineRenderer.h>
 
+#import <Fabric/Fabric.h>
+#import <Crashlytics/Crashlytics.h>
+
 
 @implementation ERAppDelegate
 
 - (BOOL)application:(UIApplication *)application willFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Crashlytics
+    [Fabric with:@[[Crashlytics class]]];
+    
+    
     // Register default preferences
     NSString *defaults = [[NSBundle mainBundle] pathForResource:@"Defaults" ofType:@"plist"];
     [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithContentsOfFile:defaults]];

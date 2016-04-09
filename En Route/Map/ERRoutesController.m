@@ -287,11 +287,14 @@
 }
 
 - (void)setupSettingsState {
-    self.barBackground.shrunken = YES;
-    self.managedNavigationItem.leftBarButtonItem  = nil;
-    self.managedNavigationItem.rightBarButtonItem = self.dismissSettingsButton;
-    
-    [self.delegate settingsShouldAppear];
+    if ([self.delegate settingsShouldAppear]) {
+        self.barBackground.shrunken = YES;
+        self.managedNavigationItem.leftBarButtonItem  = nil;
+        self.managedNavigationItem.rightBarButtonItem = self.dismissSettingsButton;
+    } else {
+        self.state = self.stateBeforeSettings;
+        self.stateBeforeSettings = 0;
+    }
 }
 
 - (void)teardownSettingsState {

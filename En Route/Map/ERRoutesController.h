@@ -22,7 +22,8 @@ typedef NS_ENUM(NSUInteger, ERSystemState)
 
 @protocol ERRoutesControllerDelegate <NSObject>
 - (void)clearButtonPressed;
-- (void)settingsShouldAppear;
+/// @return Whether the navigation bar should shrink
+- (BOOL)settingsShouldAppear;
 - (void)settingsShouldDismiss;
 - (void)suggestionsShouldAppear;
 - (void)suggestionsShouldDismiss;
