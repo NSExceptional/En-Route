@@ -49,6 +49,7 @@ typedef NS_ENUM(NSUInteger, ERSystemState)
 /// @return start if both fields are empty
 @property (nonatomic, readonly) UITextField *emptyTextField;
 @property (nonatomic, readonly) MKUserTrackingBarButtonItem *userTrackingButton;
+@property (nonatomic, readonly) UIBarButtonItem *clearButton;
 
 @property (nonatomic, readonly) BOOL textFieldsBothFull;
 @property (nonatomic, readonly) BOOL oneTextFieldFull;

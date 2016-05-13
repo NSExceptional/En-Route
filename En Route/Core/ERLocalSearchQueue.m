@@ -173,7 +173,7 @@ static dispatch_queue_t _backgroundQueue;
                 // Counts
                 ++_total;
                 if (error) {
-                    NSLog(@"-------FAIL------- %@", @(_total));
+                    NSLog(@"FAIL: %@", @(_total));
                     [TBTimer lap];
                     RunBlock(_errorCallback);
                     i = 1; // Execute completion

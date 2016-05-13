@@ -48,7 +48,7 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.title = [NSString stringWithFormat:@"%@ Restaurants", @(self.items.count)];
+    self.title = [NSString stringWithFormat:@"%@ Locations", @(self.items.count)];
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(done)];
     
     self.expandedIndex = NSNotFound;
@@ -248,7 +248,15 @@ static NSString * const kListActivityReuse = @"listactivityreuse";
 
 - (void)showShareSheetForMapItem:(MKMapItem *)item {
     //    ERMapItemActivityProvider *provider = [ERMapItemActivityProvider withName:item.name vCard:[item.placemark vCardStringForLocationWithName:item.name]];
-    UIActivityViewController *share = [[UIActivityViewController alloc] initWithActivityItems:@[item.name, item.url] applicationActivities:nil];
+    NSMutableArray *items = [NSMutableArray arrayWithObject:item.name];
+    NSString *address = item.placemark.formattedAddress;
+    if (address) {
+        [items addObject:address];
+    }
+    if (item.url) {
+        [items addObject:item.url];
+    }
+    UIActivityViewController *share = [[UIActivityViewController alloc] initWithActivityItems:items applicationActivities:nil];
     [self presentViewController:share animated:YES completion:nil];
 }
 

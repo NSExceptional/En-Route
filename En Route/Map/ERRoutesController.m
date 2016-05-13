@@ -17,7 +17,6 @@
 
 @property (nonatomic, readonly) UIBarButtonItem *routeButton;
 @property (nonatomic, readonly) UIBarButtonItem *searchButton;
-@property (nonatomic, readonly) UIBarButtonItem *clearButton;
 @property (nonatomic, readonly) UIBarButtonItem *cancelButton;
 @property (nonatomic, readonly) UIBarButtonItem *listButton;
 @property (nonatomic, readonly) UIBarButtonItem *settingsButton;

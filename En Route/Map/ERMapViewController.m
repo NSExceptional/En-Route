@@ -264,7 +264,7 @@ static BOOL trackUserInitially = NO;
         };
         // Error callback
         _searchQueue.errorCallback = ^{ @strongify(self)
-            [self.routesController setToolbarText:[NSString stringWithFormat:@"Error, stopped early. Found %@ restaurants.", @(self.POIs.count)]];
+            [self.routesController setToolbarText:[NSString stringWithFormat:@"Error, stopped early. Found %@ locations.", @(self.POIs.count)]];
         };
         // Debug callback
         _searchQueue.debugCallback = ^(NSInteger count) { @strongify(self)
@@ -587,7 +587,7 @@ static BOOL trackUserInitially = NO;
 }
 
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
-    [[NSUserDefaults standardUserDefaults] setValue:MKStringFromMapRect(self.mapView.visibleMapRect) forKey:@"MapRekt"];
+    [[NSUserDefaults standardUserDefaults] setValue:MKStringFromMapRect(self.mapView.visibleMapRect) forKey:kPref_mapRect];
 }
 
 #pragma mark - ERRoutesControllerDelegate
@@ -617,9 +617,23 @@ static BOOL trackUserInitially = NO;
         [self.latestPOIs removeAllObjects];
         self.loadingResults = NO;
         
-        // Final message
-        [self.routesController setToolbarText:[NSString stringWithFormat:@"%@ restaurants along your route", @(self.POIs.count)]];
+        if (self.POIs.count) {
+            // Final message
+            [self.routesController setToolbarText:[NSString stringWithFormat:@"%@ results along your route", @(self.POIs.count)]];
+        } else {
+            [self.routesController setToolbarText:nil];
+            [self zeroResultsWereFound];
+        }
     }];
+}
+
+- (void)zeroResultsWereFound {
+    #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    [self.routesController.clearButton.target performSelector:self.routesController.clearButton.action];
+    
+    NSString *message = @"Try tweaking the search radius or search query. Smaller radii work better for shorter routes. "
+    "You can access these settings from the bottom right corner.";
+    [[TBAlertController simpleOKAlertWithTitle:@"No Results" message:message] showFromViewController:self];
 }
 
 - (void)resultsButtonPressed {
@@ -656,8 +670,8 @@ static BOOL trackUserInitially = NO;
     
     [self.routesController setToolbarText:nil];
     
-    // Remove annotations and POIs
-    [self.mapView removeAnnotations:self.mapView.annotations];
+    // Remove annotations and POIs, but keep our pin.
+    [self.mapView removeAnnotations:self.mapView.resultAnnotations];
     
     [self dismissPickerView];
     [self resetMapData];

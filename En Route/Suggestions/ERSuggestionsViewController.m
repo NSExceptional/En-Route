@@ -210,15 +210,12 @@ static CLLocationDistance searchRadius = 10000;
         
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             if (self.lastQueryTime > 0 && [NSDate date].timeIntervalSince1970 >= self.lastQueryTime) {
-                NSLog(@"searching!!!!!!!!!");
                 self.lastQueryTime = 0;
                 [self searchNearby:self.recentQuery callback:^(NSArray *locations) {
                     _locations = locations;
                     //                NSLog(@"%@", locations);
                     [self.tableView reloadData];
                 }];
-            } else {
-                NSLog(@"ignoring");
             }
         });
     }
