@@ -25,11 +25,29 @@
     if (address)
         return address;
     
-    NSMutableString *formatted = [NSMutableString string];
-    [formatted appendString:self.addressDictionary[@"Street"]]; [formatted appendString:@", "];
-    [formatted appendString:self.addressDictionary[@"City"]];   [formatted appendString:@", "];
-    [formatted appendString:self.addressDictionary[@"State"]];
-    [formatted appendString:self.addressDictionary[@"ZIP"]];
+//    NSString *street = self.addressDictionary[@"Street"], *city = self.addressDictionary[@"City"],
+//    *state = self.addressDictionary[@"State"], *zip = self.addressDictionary[@"ZIP"];
+    
+    NSString *street = self.thoroughfare, *number = self.subThoroughfare, *city = self.locality,
+    *state = self.administrativeArea, *zip = self.postalCode, *country = self.country;
+    
+    if (!(street && city)) {
+        return nil;
+    }
+    if (number) {
+        street = [NSString stringWithFormat:@"%@ %@", number, street];
+    }
+    
+    NSMutableString *formatted = [NSMutableString stringWithFormat:@"%@, %@", street, city];
+    if (state) {
+        [formatted appendFormat:@", %@ ", state];
+    }
+    if (zip) {
+        [formatted appendString:zip];
+    }
+    if (country) {
+        [formatted appendString:country];
+    }
     
     return formatted.copy;
 }

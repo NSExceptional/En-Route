@@ -246,10 +246,10 @@ static BOOL trackUserInitially = NO;
 }
 
 - (ERLocalSearchQueue *)searchQueue {
+    NSString *query = [[NSUserDefaults standardUserDefaults] stringForKey:kPref_searchQuery];
+    CGFloat radius = [[NSUserDefaults standardUserDefaults] doubleForKey:kPref_searchRadius];
+    
     if (!_searchQueue) {
-        NSString *query = [[NSUserDefaults standardUserDefaults] stringForKey:kPref_searchQuery];
-        CGFloat radius = [[NSUserDefaults standardUserDefaults] doubleForKey:kPref_searchRadius];
-        
         @weakify(self);
         _searchQueue = [ERLocalSearchQueue queueWithQuery:query radius:radius];
         // Pause callback
@@ -265,11 +265,17 @@ static BOOL trackUserInitially = NO;
         // Error callback
         _searchQueue.errorCallback = ^{ @strongify(self)
             [self.routesController setToolbarText:[NSString stringWithFormat:@"Error, stopped early. Found %@ locations.", @(self.POIs.count)]];
+            // Cleanup
+            [self.latestPOIs removeAllObjects];
+            self.loadingResults = NO;
         };
         // Debug callback
         _searchQueue.debugCallback = ^(NSInteger count) { @strongify(self)
             [self.routesController setToolbarText:[NSString stringWithFormat:@"Fetching %@ results… ", @(count)]];
         };
+    } else {
+        _searchQueue.query = query;
+        _searchQueue.searchRadius = radius;
     }
     
     return _searchQueue;
@@ -602,7 +608,9 @@ static BOOL trackUserInitially = NO;
     
     self.loadingResults = YES;
     
-    [self.searchQueue searchRoutes:@[self.selectedRoute] repeatedCallback:^(NSArray *mapItems) {
+    @weakify(self);
+    
+    [self.searchQueue searchRoutes:@[self.selectedRoute] repeatedCallback:^(NSArray *mapItems) { @strongify(self);
         // Update map, order is important
         [self.latestPOIs setSet:[NSSet setWithArray:mapItems]];
         [self.latestPOIs minusSet:self.POIs];
@@ -611,9 +619,8 @@ static BOOL trackUserInitially = NO;
         
         // Update message and list button state
         [self.routesController setToolbarText:[NSString stringWithFormat:@"Fetching results… %@ so far…", @(self.POIs.count)]];
-    } completion:^{
+    } completion:^{ @strongify(self);
         // Remove queue, cleanup
-        self.searchQueue = nil;
         [self.latestPOIs removeAllObjects];
         self.loadingResults = NO;
         

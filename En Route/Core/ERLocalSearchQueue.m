@@ -149,7 +149,7 @@ static dispatch_queue_t _backgroundQueue;
         _lastRequestActivity = [NSDate date];
         _lastRequestCount = _locations.count;
         _timer = [NSTimer timerWithTimeInterval:1 target:self selector:@selector(decTimer) userInfo:nil repeats:YES];
-        [_timer fire];
+        [[NSRunLoop currentRunLoop] addTimer:_timer forMode:NSRunLoopCommonModes];
         
         // Make requests in a loop
         __block NSInteger i = _locations.count;
@@ -166,18 +166,20 @@ static dispatch_queue_t _backgroundQueue;
             
             // Actual request
             [[[MKLocalSearch alloc] initWithRequest:self.request] startWithCompletionHandler:^(MKLocalSearchResponse *response, NSError *error) {
+                assert(i > 0);
                 if (self.didCancel) return;
+                if (stop) return;
                 
                 RunBlockP(_loopCallback, response.mapItems);
                 
                 // Counts
                 ++_total;
                 if (error) {
-                    NSLog(@"FAIL: %@", @(_total));
-                    [TBTimer lap];
-                    RunBlock(_errorCallback);
-                    i = 1; // Execute completion
-                    stop = YES; // Terminate loop
+                    NSLog(@"/n/nFAIL: %@, %@", @(_total), error.localizedDescription);
+//                    [TBTimer lap];
+//                    RunBlock(_errorCallback);
+//                    stop = YES; // Terminate loop, no completion block
+//                    _lastRequestActivity = [NSDate date];
                 }
                 
                 // Last one
