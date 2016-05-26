@@ -18,6 +18,8 @@
 
 
 static BOOL trackUserInitially = NO;
+static NSString const * kDebugFiltered = @"kDebugFiltered";
+static NSString const * kDebugRemoved = @"kDebugRemoved";
 
 @interface ERMapViewController () <CLLocationManagerDelegate, MKMapViewDelegate, UITextFieldDelegate, ERRoutesControllerDelegate>
 
@@ -216,7 +218,8 @@ static BOOL trackUserInitially = NO;
 
 - (void)getEndPlacemark:(void(^)(MKPlacemark *end))callback {
     if ([self.routesController.dest.text isEqualToString:kCurrentLocationText]) {
-        callback([[MKPlacemark alloc] initWithCoordinate:[[self.userLocation valueForKey:@"location"] coordinate] addressDictionary:nil]);
+        NSParameterAssert(self.userLocation);
+        callback([[MKPlacemark alloc] initWithCoordinate:self.userLocation.coordinate addressDictionary:nil]);
     } else {
         [[CLGeocoder new] geocodeAddressString:self.routesController.dest.text completionHandler:^(NSArray *placemark, NSError *error) {
             if (placemark && placemark.count) {
@@ -254,8 +257,9 @@ static BOOL trackUserInitially = NO;
         _searchQueue = [ERLocalSearchQueue queueWithQuery:query radius:radius];
         // Pause callback
         _searchQueue.pauseCallback = ^(NSInteger secondsLeft) { @strongify(self)
-            //NSString *message = [NSString stringWithFormat:@"En Route is limited in the number of requests it can make in a minute. Please wait for %@ seconds.", @(secondsLeft)];
-            //[[TBAlertController simpleOKAlertWithTitle:@"Rate limiting" message:message] showFromViewController:self];
+            NSString *message = @"Limitations in the Apple Maps service only allow you to make so many searches per minute (and longer routes require more searches). "
+            "It'll just be a moment, I apologize for the inconvenience.";
+            [[TBAlertController simpleOKAlertWithTitle:@"Please Hold" message:message] showFromViewController:self];
             [self.routesController setToolbarText:[NSString stringWithFormat:@"Waiting for %@ seconds…", @(secondsLeft)]];
         };
         // Resume callback
@@ -269,10 +273,35 @@ static BOOL trackUserInitially = NO;
             [self.latestPOIs removeAllObjects];
             self.loadingResults = NO;
         };
+#if DEBUG
         // Debug callback
-        _searchQueue.debugCallback = ^(NSInteger count) { @strongify(self)
-            [self.routesController setToolbarText:[NSString stringWithFormat:@"Fetching %@ results… ", @(count)]];
+        _searchQueue.debugCallback = ^(NSArray<CLLocation*> *leftIn, NSArray<CLLocation*> *removed) { @strongify(self)
+            [self.routesController setToolbarText:[NSString stringWithFormat:@"Fetching %@ results… ", @(leftIn.count)]];
+            
+            // Unremoved locations
+            NSMutableArray *annotations = [NSMutableArray array];
+            for (CLLocation *loc in leftIn) {
+                [annotations addObject:({
+                    MKPointAnnotation *point = [MKPointAnnotation new];
+                    point.coordinate = loc.coordinate, point.title = kDebugFiltered.copy;
+                    point;
+                })];
+            }
+            [self.mapView addAnnotations:annotations];
+            
+            // Removed locations
+            [annotations removeAllObjects];
+            int i = 0;
+            for (CLLocation *loc in removed) {
+                [annotations addObject:({
+                    MKPointAnnotation *point = [MKPointAnnotation new];
+                    point.coordinate = loc.coordinate, point.title = kDebugRemoved.copy;
+                    point.subtitle = @(i++).stringValue, point;
+                })];
+            }
+            [self.mapView addAnnotations:annotations];
         };
+#endif
     } else {
         _searchQueue.query = query;
         _searchQueue.searchRadius = radius;
@@ -537,6 +566,23 @@ static BOOL trackUserInitially = NO;
         // MKPointAnnotation class, for dropped pins and restaurants
         MKPointAnnotation *point = (id)annotation;
         
+        // Debug
+        if (point.title == kDebugFiltered) {
+            MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"filtered"];
+            pin.animatesDrop         = NO;
+            pin.pinColor             = MKPinAnnotationColorPurple;
+            pin.canShowCallout       = NO;
+            return pin;
+        }
+        // Debug
+        if (point.title == kDebugRemoved) {
+            MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"removed"];
+            pin.animatesDrop         = NO;
+            pin.pinColor             = MKPinAnnotationColorGreen;
+            pin.canShowCallout       = YES;
+            return pin;
+        }
+        
         if ([point.title isEqualToString:@"Dropped Pin"]) {
             // TODO: reuse annotation views. see -[MKMapView dequeueReusableAnnotationViewWithIdentifier:
             MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"dropped"];
@@ -611,6 +657,8 @@ static BOOL trackUserInitially = NO;
     @weakify(self);
     
     [self.searchQueue searchRoutes:@[self.selectedRoute] repeatedCallback:^(NSArray *mapItems) { @strongify(self);
+        if (!self.loadingResults) return;
+        
         // Update map, order is important
         [self.latestPOIs setSet:[NSSet setWithArray:mapItems]];
         [self.latestPOIs minusSet:self.POIs];
@@ -620,6 +668,8 @@ static BOOL trackUserInitially = NO;
         // Update message and list button state
         [self.routesController setToolbarText:[NSString stringWithFormat:@"Fetching results… %@ so far…", @(self.POIs.count)]];
     } completion:^{ @strongify(self);
+        if (!self.loadingResults) return;
+        
         // Remove queue, cleanup
         [self.latestPOIs removeAllObjects];
         self.loadingResults = NO;
@@ -635,8 +685,8 @@ static BOOL trackUserInitially = NO;
 }
 
 - (void)zeroResultsWereFound {
-    #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-    [self.routesController.clearButton.target performSelector:self.routesController.clearButton.action];
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    [self.routesController.clearButton.target performSelector:self.routesController.clearButton.action withObject:nil];
     
     NSString *message = @"Try tweaking the search radius or search query. Smaller radii work better for shorter routes. "
     "You can access these settings from the bottom right corner.";

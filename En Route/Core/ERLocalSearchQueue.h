@@ -10,6 +10,7 @@
 typedef void (^VoidBlock)();
 typedef void (^ArrayBlock)(NSArray *mapItems);
 typedef void (^IntBlock)(NSInteger timeLeft);
+typedef void (^DebugBlock)(NSArray *filtered, NSArray *unfiltered);
 
 
 @interface ERLocalSearchQueue : NSObject
@@ -24,10 +25,11 @@ typedef void (^IntBlock)(NSInteger timeLeft);
 /// Whether or not we can make more requests immediately
 @property (nonatomic, readonly) BOOL ready;
 
-@property (nonatomic, copy) IntBlock debugCallback;
+@property (nonatomic, copy) DebugBlock debugCallback;
 @property (nonatomic, copy) IntBlock pauseCallback;
 @property (nonatomic, copy) VoidBlock resumeCallback;
 /// Calls completion afterwards.
 @property (nonatomic, copy) VoidBlock errorCallback;
+@property (nonatomic, copy) VoidBlock rateLimitingCallback;
 
 @end

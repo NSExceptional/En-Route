@@ -64,7 +64,7 @@
     // Navbar items
     _routeButton  = [[UIBarButtonItem alloc] initWithTitle:@"Route" style:UIBarButtonItemStyleDone target:self action:@selector(routeButtonPressed)];
     _searchButton = [[UIBarButtonItem alloc] initWithTitle:@"Search" style:UIBarButtonItemStyleDone target:self action:@selector(searchButtonPressed)];
-    _clearButton  = [[UIBarButtonItem alloc] initWithTitle:@"Clear" style:UIBarButtonItemStylePlain target:self action:@selector(clearButtonPressed)];
+    _clearButton  = [[UIBarButtonItem alloc] initWithTitle:@"Clear" style:UIBarButtonItemStylePlain target:self action:@selector(clearButtonPressed:)];
     _cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancelButtonPressed)];
     _dismissSettingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(dismissSettingsButtonPressed)];
 }
@@ -191,9 +191,11 @@
 #pragma mark Button actions
 // Results button goes directly to delegate
 
-- (void)clearButtonPressed {
-    self.start.text = nil;
-    self.dest.text  = nil;
+- (void)clearButtonPressed:(id)sender {
+    if (sender) {
+        self.start.text = nil;
+        self.dest.text  = nil;
+    }
     
     [self.userTrackingButton.mapView setUserTrackingMode:MKUserTrackingModeNone animated:YES];
     self.state = ERSystemStateDefault;
@@ -234,6 +236,7 @@
 
 - (void)setupInitialState {
     self.barBackground.shrunken = NO;
+    self.settingsButton.enabled = YES;
     self.clearButton.enabled = self.oneTextFieldFull;
     self.routeButton.enabled = self.textFieldsBothFull;
     self.managedNavigationItem.leftBarButtonItem  = self.clearButton;
@@ -242,6 +245,7 @@
 
 - (void)setupSuggestionState {
     self.barBackground.shrunken = NO;
+    self.settingsButton.enabled = YES;
     self.cancelButton.enabled = YES;
     self.routeButton.enabled  = self.textFieldsBothFull;
     self.managedNavigationItem.leftBarButtonItem  = self.cancelButton;
@@ -252,6 +256,7 @@
 
 - (void)setupFindingRoutesState {
     self.barBackground.shrunken = YES;
+    self.settingsButton.enabled = NO;
     self.clearButton.enabled  = NO;
     self.searchButton.enabled = NO;
     self.managedNavigationItem.leftBarButtonItem  = self.clearButton;
@@ -266,6 +271,7 @@
 
 - (void)setupRoutePickerState {
     self.barBackground.shrunken = NO;
+    self.settingsButton.enabled = YES;
     self.clearButton.enabled  = YES;
     self.searchButton.enabled = YES;
     self.managedNavigationItem.leftBarButtonItem  = self.clearButton;
@@ -276,6 +282,7 @@
 
 - (void)setupResultsState {
     self.barBackground.shrunken = NO;
+    self.settingsButton.enabled = YES;
     self.clearButton.enabled = YES;
     self.managedNavigationItem.leftBarButtonItem  = self.clearButton;
     self.managedNavigationItem.rightBarButtonItem = nil;

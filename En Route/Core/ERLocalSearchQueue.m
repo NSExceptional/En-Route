@@ -8,9 +8,11 @@
 
 #import "ERLocalSearchQueue.h"
 
-#define RunBlock(block) if ( block ) block()
-#define RunBlockP(block, params) if ( block ) block( params )
 
+#define RunBlock(block) if ( block ) block()
+#define RunBlockP(block, ...) if ( block ) block( __VA_ARGS__ )
+
+static CLLocationDistance const kMinDistanceBetweenPoints = 200;
 
 @interface ERLocalSearchQueue ()
 @property (nonatomic) MKLocalSearchRequest *request;
@@ -103,8 +105,9 @@ static dispatch_queue_t _backgroundQueue;
     _locations = filteredCoords.array;
     
     [self filterLocations];
+    [filteredCoords removeObjectsInArray:self.locations];
     
-    RunBlockP(_debugCallback, _locations.count);
+    RunBlockP(_debugCallback, self.locations, filteredCoords.array);
     if (!_locations.count) {
         // Return if we have no requests to make.
         RunBlock(_completion);
@@ -176,10 +179,10 @@ static dispatch_queue_t _backgroundQueue;
                 ++_total;
                 if (error) {
                     NSLog(@"/n/nFAIL: %@, %@", @(_total), error.localizedDescription);
-//                    [TBTimer lap];
-//                    RunBlock(_errorCallback);
-//                    stop = YES; // Terminate loop, no completion block
-//                    _lastRequestActivity = [NSDate date];
+                    //                    [TBTimer lap];
+                    //                    RunBlock(_errorCallback);
+                    //                    stop = YES; // Terminate loop, no completion block
+                    //                    _lastRequestActivity = [NSDate date];
                 }
                 
                 // Last one
@@ -208,32 +211,116 @@ static dispatch_queue_t _backgroundQueue;
     _didCancel = YES;
 }
 
+- (void)filterLocations:(NSArray *)locations into:(NSMutableArray *)filtered givenRange:(NSRange)range previousAddition:(NSUInteger)prevIdx {
+    if (locations.count < 2) {
+        [filtered addObjectsFromArray:locations];
+        return;
+    }
+    
+    if (range.length < 2) {
+        [filtered addObjectsFromArray:[locations subarrayWithRange:range]];
+        return;
+    }
+    
+    NSInteger half     = range.length/2;
+    NSInteger addedIdx = range.location + half;
+    NSInteger diff     = range.length % 2;
+    
+    // Add middle object if it is far enough away,
+    // since we assume at this point that we
+    // are here because we need at least one
+    CLLocation *middle = locations[addedIdx];
+    if (prevIdx == NSNotFound) {
+        [filtered addObject:middle];
+    }
+    else {
+        CLLocation *previous = locations[prevIdx];
+        if ([middle distanceFromLocation:previous] >= kMinDistanceBetweenPoints) {
+            [filtered addObject:middle];
+        } else {
+            // May be the same location but we will have to deal for now
+            addedIdx = [self nextBestPointIn:locations from:addedIdx relativeTo:prevIdx];
+            [filtered addObject:locations[addedIdx]];
+            
+        }
+    }
+    
+    CLLocation *left, *right;
+    // We are on the "right" side
+    if (prevIdx != NSNotFound) {
+        if (prevIdx < addedIdx) {
+            left = locations[prevIdx], right = locations[NSMaxRange(range)-1];
+        }
+        // We are on the "left" side
+        else {
+            left = locations[range.location], right = locations[prevIdx];
+        }
+    } else {
+        left = locations[range.location], right = locations[NSMaxRange(range)-1];
+    }
+    
+    // Add any needed on the first half
+    //    CLLocationDistance d1 = [left distanceFromLocation:middle];
+    if ([left distanceFromLocation:middle] >= _searchRadius) {
+        [self filterLocations:locations into:filtered givenRange:NSMakeRange(range.location, half) previousAddition:addedIdx];
+    }
+    
+    // Add any needed on the second half
+    //    CLLocationDistance d2 = [middle distanceFromLocation:right];
+    if ([middle distanceFromLocation:right] >= _searchRadius) {
+        [self filterLocations:locations into:filtered givenRange:NSMakeRange(addedIdx, half + diff) previousAddition:addedIdx];
+    }
+}
+
+- (NSUInteger)nextBestPointIn:(NSArray *)locations from:(NSUInteger)tooCloseIdx relativeTo:(NSUInteger)prevIdx {
+    NSParameterAssert(tooCloseIdx != prevIdx);
+    NSInteger dir = tooCloseIdx < prevIdx ? -1 : 1;
+    CLLocation *cur, *previous = locations[prevIdx];
+    
+    for (NSInteger i = tooCloseIdx + dir; i >= 0 && i < locations.count; i += dir) {
+        cur = locations[i];
+        if ([cur distanceFromLocation:previous] >= kMinDistanceBetweenPoints) {
+            return i;
+        }
+    }
+    
+    return tooCloseIdx;
+}
+
 - (void)filterLocations {
-    NSCountedSet *newLocs = [NSCountedSet setWithArray:self.locations];
-    for (CLLocation *loca in self.locations)
-        for (CLLocation *locb in self.locations)
-            if ([loca distanceFromLocation:locb] < _searchRadius)
-                if (loca != locb)
-                    [newLocs addObject:loca];
+    NSMutableArray *filtered = [NSMutableArray array];
+    [self filterLocations:self.locations into:filtered givenRange:NSMakeRange(0, self.locations.count) previousAddition:NSNotFound];
     
-    self.locations = [self optimize:newLocs];
-}
-
-- (NSArray *)optimize:(NSCountedSet *)set {
-    NSArray *a = [self filteredSetObjectsWithMaxCount:3 set:set];
-    NSArray *b = [self filteredSetObjectsWithMaxCount:4 set:set];
-    NSArray *c = [self filteredSetObjectsWithMaxCount:5 set:set];
+    // Hack to remove locations within 100 meters of each other,
+    // because there's a bug in my algorithm aparently...
+    NSMutableArray *toRemove = [NSMutableArray array];
+    for (CLLocation *pointA in filtered)
+        for (CLLocation *pointB in filtered)
+            if (pointA != pointB && [pointA distanceFromLocation:pointB] < 100 &&
+                ![toRemove containsObject:pointA] && ![toRemove containsObject:pointB]) {
+                [toRemove addObject:pointA];
+            }
     
-    if (a.count > 50) return a;
-    if (c.count < 50) return c;
-    if (b.count < 50) return b;
-    return a;
-}
-
-- (NSArray *)filteredSetObjectsWithMaxCount:(NSInteger)count set:(NSCountedSet *)set {
-    return [set filteredSetUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-        return [set countForObject:evaluatedObject] < count;
-    }]].allObjects;
+    [filtered removeObjectsInArray:toRemove];
+    self.locations = filtered.copy;
 }
 
 @end
+
+CLLocationCoordinate2D sphericalMidpoint(CLLocationCoordinate2D pointA, CLLocationCoordinate2D pointB) {
+    CLLocationDegrees lon1 = pointA.longitude * M_PI / 180;
+    CLLocationDegrees lon2 = pointB.longitude * M_PI / 100;
+    
+    CLLocationDegrees lat1 = pointA.latitude * M_PI / 180;
+    CLLocationDegrees lat2 = pointB.latitude * M_PI / 100;
+    
+    CLLocationDegrees dLon = lon2 - lon1;
+    
+    CLLocationDegrees x = cos(lat2) * cos(dLon);
+    CLLocationDegrees y = cos(lat2) * sin(dLon);
+    
+    CLLocationDegrees lat3 = atan2( sin(lat1) + sin(lat2), sqrt((cos(lat1) + x) * (cos(lat1) + x) + y * y) );
+    CLLocationDegrees lon3 = lon1 + atan2(y, cos(lat1) + x);
+    
+    return CLLocationCoordinate2DMake(lat3 * 180 / M_PI, lon3 * 180 / M_PI);
+}
