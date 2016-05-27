@@ -289,17 +289,17 @@ static NSString const * kDebugRemoved = @"kDebugRemoved";
             }
             [self.mapView addAnnotations:annotations];
             
-            // Removed locations
-            [annotations removeAllObjects];
-            int i = 0;
-            for (CLLocation *loc in removed) {
-                [annotations addObject:({
-                    MKPointAnnotation *point = [MKPointAnnotation new];
-                    point.coordinate = loc.coordinate, point.title = kDebugRemoved.copy;
-                    point.subtitle = @(i++).stringValue, point;
-                })];
-            }
-            [self.mapView addAnnotations:annotations];
+//            // Removed locations
+//            [annotations removeAllObjects];
+//            int i = 0;
+//            for (CLLocation *loc in removed) {
+//                [annotations addObject:({
+//                    MKPointAnnotation *point = [MKPointAnnotation new];
+//                    point.coordinate = loc.coordinate, point.title = kDebugRemoved.copy;
+//                    point.subtitle = @(i++).stringValue, point;
+//                })];
+//            }
+//            [self.mapView addAnnotations:annotations];
         };
 #endif
     } else {
@@ -721,6 +721,8 @@ static NSString const * kDebugRemoved = @"kDebugRemoved";
 }
 
 - (void)clearButtonPressed {
+    [self cancelSearch];
+    
     // Remove overlays, clear fields
     [self.mapView removeOverlays:self.mapView.overlays];
     [self.renderers removeAllObjects];
@@ -757,12 +759,12 @@ static NSString const * kDebugRemoved = @"kDebugRemoved";
 }
 
 - (void)suggestionsShouldAppear {
-    [self cancelSearch];
     [self presentSuggestionsList];
 }
 
 - (void)suggestionsShouldDismiss {
     [self.suggestions animateDismissalAndRemove];
+    [self cancelSearch];
 }
 
 - (BOOL)settingsShouldAppear {

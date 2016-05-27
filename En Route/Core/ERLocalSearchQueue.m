@@ -12,7 +12,7 @@
 #define RunBlock(block) if ( block ) block()
 #define RunBlockP(block, ...) if ( block ) block( __VA_ARGS__ )
 
-static CLLocationDistance const kMinDistanceBetweenPoints = 200;
+static CLLocationDistance const kMinDistanceBetweenPoints = 250;
 
 @interface ERLocalSearchQueue ()
 @property (nonatomic) MKLocalSearchRequest *request;
@@ -225,6 +225,7 @@ static dispatch_queue_t _backgroundQueue;
     NSInteger half     = range.length/2;
     NSInteger addedIdx = range.location + half;
     NSInteger diff     = range.length % 2;
+    NSInteger offset   = 0;
     
     // Add middle object if it is far enough away,
     // since we assume at this point that we
@@ -239,7 +240,9 @@ static dispatch_queue_t _backgroundQueue;
             [filtered addObject:middle];
         } else {
             // May be the same location but we will have to deal for now
+            offset = addedIdx;
             addedIdx = [self nextBestPointIn:locations from:addedIdx relativeTo:prevIdx];
+            offset -= addedIdx;
             [filtered addObject:locations[addedIdx]];
             
         }
@@ -261,14 +264,14 @@ static dispatch_queue_t _backgroundQueue;
     
     // Add any needed on the first half
     //    CLLocationDistance d1 = [left distanceFromLocation:middle];
-    if ([left distanceFromLocation:middle] >= _searchRadius) {
-        [self filterLocations:locations into:filtered givenRange:NSMakeRange(range.location, half) previousAddition:addedIdx];
+    if ([left distanceFromLocation:middle] >= _searchRadius*2) {
+        [self filterLocations:locations into:filtered givenRange:NSMakeRange(range.location, half - offset) previousAddition:addedIdx];
     }
     
     // Add any needed on the second half
     //    CLLocationDistance d2 = [middle distanceFromLocation:right];
-    if ([middle distanceFromLocation:right] >= _searchRadius) {
-        [self filterLocations:locations into:filtered givenRange:NSMakeRange(addedIdx, half + diff) previousAddition:addedIdx];
+    if ([middle distanceFromLocation:right] >= _searchRadius*2) {
+        [self filterLocations:locations into:filtered givenRange:NSMakeRange(addedIdx, half + diff + offset) previousAddition:addedIdx];
     }
 }
 
@@ -291,17 +294,27 @@ static dispatch_queue_t _backgroundQueue;
     NSMutableArray *filtered = [NSMutableArray array];
     [self filterLocations:self.locations into:filtered givenRange:NSMakeRange(0, self.locations.count) previousAddition:NSNotFound];
     
-    // Hack to remove locations within 100 meters of each other,
+    // Hack to remove locations within 250 meters of each other,
     // because there's a bug in my algorithm aparently...
     NSMutableArray *toRemove = [NSMutableArray array];
-    for (CLLocation *pointA in filtered)
-        for (CLLocation *pointB in filtered)
-            if (pointA != pointB && [pointA distanceFromLocation:pointB] < 100 &&
-                ![toRemove containsObject:pointA] && ![toRemove containsObject:pointB]) {
-                [toRemove addObject:pointA];
-            }
+    for (int i = 1; i < filtered.count; i++) {
+        CLLocation *pointA = filtered[i-1], *pointB = filtered[i];
+        if (pointA != pointB && [pointA distanceFromLocation:pointB] < 250 &&
+            ![toRemove containsObject:pointA] && ![toRemove containsObject:pointB]) {
+            [toRemove addObject:pointA];
+        }
+    }
     
     [filtered removeObjectsInArray:toRemove];
+#if DEBUG
+    NSLog(@"Removing %@ locations", @(toRemove.count));
+    
+    NSMutableArray *distances = [NSMutableArray array];
+    for (int i = 1; i < filtered.count; i++) {
+        [distances addObject:@([filtered[i-1] distanceFromLocation:filtered[i]])];
+    }
+#end
+    
     self.locations = filtered.copy;
 }
 
