@@ -1,9 +1,14 @@
-pod 'TBAlertController', :inhibit_warnings => true
-pod 'FLEX', :inhibit_warnings => true
-pod 'MirrorKit', :inhibit_warnings => true
-pod 'libextobjc', :inhibit_warnings => true
-pod 'Objc-iOS-Extensions'
-pod 'Masonry'
+platform :ios, '9.0'
+inhibit_all_warnings!
 
-pod 'Fabric'
-pod 'Crashlytics'
+target 'En Route' do
+  pod 'TBAlertController'
+  pod 'MirrorKit'
+  pod 'libextobjc'
+  pod 'Objc-iOS-Extensions', :path => "../Objc-iOS-Extensions"
+  pod 'Masonry'
+
+  pod 'Fabric'
+  pod 'Crashlytics'
+
+end
