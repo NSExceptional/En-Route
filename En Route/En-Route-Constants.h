@@ -9,7 +9,10 @@
 #import <UIKit/UIKit.h>
 
 
-typedef void(^VoidBlock)();
+typedef void (^VoidBlock)();
+typedef void (^ArrayBlock)(NSArray *mapItems);
+typedef void (^IntBlock)(NSInteger timeLeft);
+typedef void (^DebugBlock)(NSArray *filtered, NSArray *unfiltered);
 
 extern NSString * const kCurrentLocationText;
 

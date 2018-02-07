@@ -313,7 +313,7 @@ static dispatch_queue_t _backgroundQueue;
     for (int i = 1; i < filtered.count; i++) {
         [distances addObject:@([filtered[i-1] distanceFromLocation:filtered[i]])];
     }
-#end
+#endif
     
     self.locations = filtered.copy;
 }

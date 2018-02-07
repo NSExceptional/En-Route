@@ -35,10 +35,18 @@ static NSString * const kFeedbackReuse = @"ERFeedbackCellsReuse";
     
     self.tableView.scrollEnabled   = NO;
     self.tableView.layoutMargins   = UIEdgeInsetsZero;
+    self.tableView.rowHeight       = 44;
+    self.tableView.estimatedRowHeight = 120;
     self.tableView.tableHeaderView = ({
-        CGFloat scale = [UIScreen mainScreen].scale;
-        UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.view.frame), 1.f/scale)];
+        CGFloat scale = [UIScreen mainScreen].scale, width = self.view.frame.size.width;
+        UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 1.f/scale)];
         view.backgroundColor = self.tableView.separatorColor;
+        view;
+    });
+    self.tableView.tableFooterView = ({
+        CGFloat width = self.view.frame.size.width, height = 50;
+        UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, height)];
+        view.backgroundColor = self.tableView.backgroundColor;
         view;
     });
     
@@ -138,13 +146,13 @@ static NSString * const kFeedbackReuse = @"ERFeedbackCellsReuse";
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     switch (section) {
         case 0:
-            return @"What are you looking for? A place to eat, lodging, etc. Tap to edit.";
+            return @"Tap to edit. What are you looking for?\nA place to eat, lodging, etc.";
         case 1:
             return @"Radius (in meters) to search along the path of the route you choose."
             " Larger radii will search faster, but smaller radii will yield more results in most cases. Use a small radius with very short routes.";
         case 2:
-            return @"Made by Tanner Bennett with help from London Steele at Baylor University."
-            " Designed by Mark Malstrom and myself. Find me on Twitter at @ThePantsThief. I appreciate your purchase!";
+            return @"Copyright Tanner Bennett 2018."
+            " Designed by Mark Malstrom and Tanner Bennett. Find me on Twitter at @NSExceptional. I appreciate your purchase!";
         default:
             return nil;
     }
@@ -160,7 +168,7 @@ static NSString * const kFeedbackReuse = @"ERFeedbackCellsReuse";
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(nonnull UITableViewCell *)cell forRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
     if (cell == self.radiusCell) {
-        self.radiusCell.meters.font = [(id)[self.radiusCell.pickerView subviewWithClass:[UILabel class]] font];
+        self.radiusCell.meters.font = [(UILabel *)[self.radiusCell.pickerView subviewWithClass:[UILabel class]] font];
     }
 }
 

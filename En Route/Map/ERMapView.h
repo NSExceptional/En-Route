@@ -9,9 +9,6 @@
 @import MapKit;
 
 
-static const CGFloat kControlViewHeight = 140;
-
-
 @interface ERMapView : MKMapView
 
 @property (nonatomic, readonly, getter=_panningGestureRecognizer) UIPanGestureRecognizer *panningGestureRecognizer;

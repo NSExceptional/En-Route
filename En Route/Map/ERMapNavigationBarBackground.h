@@ -10,6 +10,8 @@
 #import "ERAddressTextField.h"
 
 
+CGFloat ERDesiredNavigationBarHeight(void);
+
 @interface ERMapNavigationBarBackground : UIView
 
 @property (nonatomic) BOOL shrunken;

@@ -8,7 +8,7 @@
 
 #import "ERMapView.h"
 #import "MKPlacemark+MKPointAnnotation.h"
-
+#import "ERMapNavigationBarBackground.h"
 
 @interface ERMapView ()
 
@@ -37,7 +37,7 @@
     // Adjust compass position
     UIView *compass = self.compassView_;
     CGRect frame = compass.frame;
-    frame.origin.y = kControlViewHeight + 5;
+    frame.origin.y = ERDesiredNavigationBarHeight() + 5;
     frame.origin.x = CGRectGetWidth([UIScreen mainScreen].bounds) - (5 + CGRectGetWidth(frame));
     compass.frame = frame;
 }

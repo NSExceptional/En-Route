@@ -32,10 +32,6 @@
     
     [self.window makeKeyAndVisible];
     
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:[FLEXManager sharedManager] action:@selector(showExplorer)];
-    tap.numberOfTouchesRequired = 3;
-    [self.window addGestureRecognizer:tap];
-    
     [self potentiallyResetPrompts];
     
 #if TARGET_IPHONE_SIMULATOR

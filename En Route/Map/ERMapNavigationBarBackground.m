@@ -7,13 +7,31 @@
 //
 
 #import "ERMapNavigationBarBackground.h"
+#import "UIApplication+Design.h"
 
 
-static const CGFloat kControlViewHeight = 140;
 static const CGFloat kTFHeight          = 28;
 static const CGFloat kTFSidePadding     = 6;
 static const CGFloat kTFSpacing         = kTFSidePadding;
 static const CGFloat kTFBottomPadding   = 12;
+
+CGFloat ERDesiredNavigationBarHeight() {
+    static CGFloat height = 0;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        if (@available(iOS 11.0, *)) {
+            if ([UIApplication sharedApplication].keyWindow.safeAreaInsets.top > 0.0) {
+                height = 164;
+            } else {
+                height = 140;
+            }
+        } else {
+            height = 140;
+        }
+    });
+
+    return height;
+}
 
 
 @interface ERMapNavigationBarBackground ()
@@ -31,7 +49,7 @@ static const CGFloat kTFBottomPadding   = 12;
 @implementation ERMapNavigationBarBackground
 
 - (id)init {
-    return [self initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, kControlViewHeight)];
+    return [self initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, ERDesiredNavigationBarHeight())];
 }
 
 - (id)initWithFrame:(CGRect)frame {
@@ -58,12 +76,12 @@ static const CGFloat kTFBottomPadding   = 12;
         
         // Nav bar hairline
         _hairline = [[UIView alloc] initWithFrame:zero];
-        _hairline.backgroundColor = [UIColor colorWithWhite:0.000 alpha:0.301];
+        _hairline.backgroundColor = [UIColor colorWithWhite:0.000 alpha:0.300];
         
         // Add subviews
-        [_controlsBackgroundView addSubview:_startTextField];
-        [_controlsBackgroundView addSubview:_endTextField];
-        [_controlsBackgroundView addSubview:_hairline];
+        [_controlsBackgroundView.contentView addSubview:_startTextField];
+        [_controlsBackgroundView.contentView addSubview:_endTextField];
+        [_controlsBackgroundView.contentView addSubview:_hairline];
         [self addSubview:_controlsBackgroundView];
     }
     
@@ -142,8 +160,8 @@ static const CGFloat kTFBottomPadding   = 12;
     self.startTextField.hidden = YES;
     self.endTextField.hidden = YES;
     
-    [_controlsBackgroundView addSubview:self.startImageView];
-    [_controlsBackgroundView addSubview:self.endImageView];
+    [_controlsBackgroundView.contentView addSubview:self.startImageView];
+    [_controlsBackgroundView.contentView addSubview:self.endImageView];
 }
 
 - (void)updateImageViews {
@@ -155,7 +173,7 @@ static const CGFloat kTFBottomPadding   = 12;
 }
 
 - (void)shrink {
-    CGFloat viewHeight = 64;
+    CGFloat viewHeight = [UIApplication navigationBarMaxY];
     CGFloat hairlineHeight = 1.f/[UIScreen mainScreen].scale;
     CGFloat tfRatio = CGRectGetWidth(_startTextField.frame) / CGRectGetHeight(_startTextField.frame);
     CGFloat textFieldWidth = tfRatio;
@@ -176,9 +194,9 @@ static const CGFloat kTFBottomPadding   = 12;
 }
 
 - (void)grow {
-    [self setFrameHeight:kControlViewHeight];
+    [self setFrameHeight:ERDesiredNavigationBarHeight()];
     
-    CGFloat viewHeight = kControlViewHeight;
+    CGFloat viewHeight = ERDesiredNavigationBarHeight();
     CGFloat hairlineHeight = 1.f/[UIScreen mainScreen].scale;
     
     CGRect r = self.frame;

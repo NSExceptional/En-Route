@@ -14,7 +14,7 @@
 + (instancetype)viewForAnnotation:(MKAnnotationView *)pin;
 
 @property (nonatomic) UIColor *buttonColor;
-@property (nonatomic, copy) void (^buttonTapHandler)();
+@property (nonatomic, copy) void (^buttonTapHandler)(void);
 @property (nonatomic) CGFloat buttonTitleYOffset;
 
 @property (nonatomic) BOOL useDestinationButton;

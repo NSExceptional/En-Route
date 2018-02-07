@@ -11,6 +11,8 @@
 @implementation ERListActivityCell
 
 - (void)awakeFromNib {
+    [super awakeFromNib];
+
     self.layoutMargins = UIEdgeInsetsZero;
     
     self.backgroundColor = nil;

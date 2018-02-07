@@ -8,7 +8,6 @@
 
 #import "ERMapViewController.h"
 #import "ERCalloutView.h"
-#import "ERMapNavigationBarBackground.h"
 #import "ERLocalSearchQueue.h"
 #import "ERListViewController.h"
 #import "TBTableViewController.h"
@@ -29,10 +28,10 @@ static NSString const * kDebugRemoved = @"kDebugRemoved";
 
 @property (nonatomic) ERSettingsViewController *settings;
 
-@property (nonatomic          ) NSMutableSet *POIs;
-@property (nonatomic          ) NSMutableSet *latestPOIs;
-@property (nonatomic, readonly) NSArray      *annotations;
-@property (nonatomic, readonly) NSArray      *latestAnnotations;
+@property (nonatomic          ) NSMutableSet<MKMapItem*>  *POIs;
+@property (nonatomic          ) NSMutableSet<MKMapItem*>  *latestPOIs;
+@property (nonatomic, readonly) NSArray<id<MKAnnotation>> *annotations;
+@property (nonatomic, readonly) NSArray<id<MKAnnotation>> *latestAnnotations;
 
 @property (nonatomic          ) MKAnnotationView *userLocationView;
 @property (nonatomic, readonly) CLLocation       *userLocation;
@@ -273,12 +272,12 @@ static NSString const * kDebugRemoved = @"kDebugRemoved";
             [self.latestPOIs removeAllObjects];
             self.loadingResults = NO;
         };
-#if DEBUG
+#if !DEBUG
         // Debug callback
         _searchQueue.debugCallback = ^(NSArray<CLLocation*> *leftIn, NSArray<CLLocation*> *removed) { @strongify(self)
             [self.routesController setToolbarText:[NSString stringWithFormat:@"Fetching %@ results… ", @(leftIn.count)]];
             
-            // Unremoved locations
+            // DEBUG: Unremoved coords
             NSMutableArray *annotations = [NSMutableArray array];
             for (CLLocation *loc in leftIn) {
                 [annotations addObject:({
@@ -378,7 +377,6 @@ static NSString const * kDebugRemoved = @"kDebugRemoved";
         CGFloat h = CGRectGetHeight(self.view.frame) - y;
         self.suggestions.view.frame = CGRectMake(0, y, w, h);
         
-        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kPref_didPromptForContactAccess];
         if (self.suggestions.canShowContacts) {
             [self animateSuggestionsPresentation];
         } else {
@@ -443,9 +441,15 @@ static NSString const * kDebugRemoved = @"kDebugRemoved";
     
     CGFloat pxheight   = 1/[UIScreen mainScreen].scale;
     CGSize contentSize = _pickerController.tableView.contentSize;
-    CGFloat y          = CGRectGetHeight(self.view.frame) - CGRectGetHeight(self.navigationController.toolbar.frame) - contentSize.height;
-    y                  += pxheight;
-    CGFloat width      = CGRectGetWidth(self.view.frame);
+    CGFloat width      = self.view.frame.size.width;
+    CGFloat y = ({
+        CGFloat y = self.view.frame.size.height;
+        y -= contentSize.height;
+        y += pxheight;
+        if (@available(iOS 11, *)) { y -= self.view.safeAreaInsets.bottom; }
+        else { y -= self.navigationController.toolbar.frame.size.height; }
+        y;
+    });
     _pickerController.tableView.frame = CGRectMake(0, y, width, contentSize.height);
     
     UIView *hairline = ({
@@ -570,7 +574,7 @@ static NSString const * kDebugRemoved = @"kDebugRemoved";
         if (point.title == kDebugFiltered) {
             MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"filtered"];
             pin.animatesDrop         = NO;
-            pin.pinColor             = MKPinAnnotationColorPurple;
+            pin.pinTintColor         = [MKPinAnnotationView purplePinColor];
             pin.canShowCallout       = NO;
             return pin;
         }
@@ -578,7 +582,7 @@ static NSString const * kDebugRemoved = @"kDebugRemoved";
         if (point.title == kDebugRemoved) {
             MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"removed"];
             pin.animatesDrop         = NO;
-            pin.pinColor             = MKPinAnnotationColorGreen;
+            pin.pinTintColor         = [MKPinAnnotationView greenPinColor];
             pin.canShowCallout       = YES;
             return pin;
         }
@@ -587,7 +591,7 @@ static NSString const * kDebugRemoved = @"kDebugRemoved";
             // TODO: reuse annotation views. see -[MKMapView dequeueReusableAnnotationViewWithIdentifier:
             MKPinAnnotationView *pin = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"dropped"];
             pin.animatesDrop         = YES;
-            pin.pinColor             = MKPinAnnotationColorRed;
+            pin.pinTintColor         = [MKPinAnnotationView redPinColor];
             pin.canShowCallout       = YES;
             pin.calloutOffset        = CGPointMake(-8, 0);
             self.droppedPin = pin;
@@ -656,7 +660,7 @@ static NSString const * kDebugRemoved = @"kDebugRemoved";
     
     @weakify(self);
     
-    [self.searchQueue searchRoutes:@[self.selectedRoute] repeatedCallback:^(NSArray *mapItems) { @strongify(self);
+    [self.searchQueue searchRoutes:@[self.selectedRoute] repeatedCallback:^(NSArray<MKMapItem*> *mapItems) { @strongify(self);
         if (!self.loadingResults) return;
         
         // Update map, order is important
